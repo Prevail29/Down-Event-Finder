@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Down-Events Finder</title>
+    <link rel="stylesheet" href="panel.css">
+</head>
+
+<body>
+    <h1>Down-Events Finder</h1>
+    <hr>
+    <h2>Options</h2>
+    <div>
+        <fieldset>
+            <legend>Settings</legend>
+            <input type="checkbox" id="slow" name="slow">
+            <label for="slow">Slow test</label>
+            <br>
+            <div class="hidden">
+                <label for="speed">Testing speed (in milliseconds)</label>
+                <input type="number" id="speed" name="speed" required value="10">
+            </div>
+            <input type="checkbox" id="marking" name="marking" checked>
+            <label for="marking">Mark all elements with down-events</label>
+            <br>
+            <input type="checkbox" id="form" name="form" checked>
+            <label for="form">Test forms</label>
+        </fieldset>
+    </div>
+    <br>
+    <div>
+        <details class="filter">
+            <summary>Filter</summary>
+            <br>
+            <div class="columns">
+                <input type="checkbox" id="checkAll" name="checkAll" checked>
+                <label for="checkAll">Check/Uncheck All</label>
+                <h3>General</h3>
+                <input type="checkbox" id="multipleDownEvents" name="multipleDownEvents">
+                <label for="multipleDownEvents">All down-events</label>
+                <h3 id="attributeHeading">Attribute Filter</h3>
+                <input type="checkbox" id="cssFilter" name="cssFilter" checked>
+                <label for="cssFilter">Styling</label>
+                <br>
+                <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
+                <label for="falsyFilter">Falsy values</label>
+                <br>
+                <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
+                <label for="sameAttributeFilter">Identical values</label>
+                <br>
+                <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
+                <label for="ariaExpandedFilter">Aria-expanded</label>
+                <br>
+                <input type="checkbox" id="dataFilter" name="dataFilter" checked>
+                <label for="dataFilter">Data</label>
+                <h3>ChildList Filter</h3>
+                <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
+                <label for="headTitleFilter">Targeting Head and Title</label>
+                <h3>CharacterData Filter</h3>
+                <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
+                <label for="sameCDFilter">Identical values</label>
+            </div>
+        </details>
+    </div>
+    <br>
+    <div>
+        <details class="colors">
+            <summary>Change colours</summary>
+            <div>
+                <input type="color" id="primaryWarningColor" name="primaryWarningColor" value="#9400D3">
+                <label for="primaryWarningColor">Primary warning color</label>
+                <br>
+                <input type="color" id="secondaryWarningColor" name="secondaryWarningColor" value="#F5F531">
+                <label for="secondaryWarningColor">Secondary warning color</label>
+                <br>
+                <input type="color" id="primaryProblemColor" name="primaryProblemColor" value="#ff8400">
+                <label for="primaryProblemColor">Primary problem color</label>
+                <br>
+                <input type="color" id="secondaryProblemColor" name="secondaryProblemColor" value="#0421c4">
+                <label for="secondaryProblemColor">Secondary problem color</label>
+            </div>
+        </details>
+    </div>
+    <hr>
+    <h2>Examining website</h2>
+    <div>
+        <button id="initiateButton">Start test</button>
+    </div>
+    <hr>
+    <h2>Results</h2>
+    <div id="results"></div>
+</body>
+
+<script type="text/javascript" src="panel.js"></script>
+
+</html>

@@ -1,0 +1,53 @@
+* {
+    font-family: 'Arial';
+}
+
+details {
+    border: 1px solid grey;
+}
+
+summary {
+    padding: 0.2em;
+}
+
+details[open] summary {
+    border-bottom: 1px solid #aaa;
+}
+
+fieldset {
+    border: 1px solid grey;
+}
+
+.hidden {
+    display: none;
+}
+
+.columns {
+    columns: 3;
+}
+
+#attributeHeading {
+    break-before: column;
+    margin-top: auto;
+}
+
+.colors div {
+    columns: 2;
+}
+
+#primaryHighlightColor,
+#primaryProblemColor {
+    margin-bottom: 1em;
+}
+
+#initiateButton {
+    color: black;
+    background-color: #E8E8E8;
+    padding: 0.4em;
+    cursor: pointer;
+    border: 1px solid #A6A6A6;
+}
+
+#initiateButton:hover {
+    background-color: #CFCFCF;
+}
