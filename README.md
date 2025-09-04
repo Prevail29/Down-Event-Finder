@@ -6,7 +6,7 @@ Options allow for further customization:
 - Change the color of outlined elements.
 - Enable a slower test for closely inspecting each element.
 - Mark all elements with down-events.
-- Test form elements (<input> and <textarea>).
+- Test form elements (input and textarea).
 - Enable or disable various filters for preventing / allowing the following observations:
   - "All Down-Events": any additional down-events after the first observed one.
   - "Styling": any attribute changes adding or removing css except "display".
@@ -36,6 +36,7 @@ Websites for testing the extension can be found on [GitHub](https://github.com/P
 ## License
 This extension is licensed under the MIT license.
 View the LICENSE.txt file for more information.
+
 
 
 
