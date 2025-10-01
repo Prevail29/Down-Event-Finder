@@ -102,15 +102,16 @@ async function testWebsite(checkboxes, filter, speed, colors) {
 
     // Function for handling mutations
     function inspectMutation(num, mutation, eventType) {
-        let validity = callback(num, mutation, eventType)
+        let validity = callback(mutation, eventType)
         observer.disconnect()
         if (validity) {
-            let visibility = true
+            let visibility = !(getComputedStyle(importantElements[num]).display === "none")
             let elementClone = importantElements[num].cloneNode(false)
             let problemElement = elementClone.outerHTML
-            if (getComputedStyle(importantElements[num]).display === "none") visibility = false
+            importantElements[num].id = "DownEventsFinder-" + num
             const completeProblemElement = {
                 problemElement: problemElement,
+                id: importantElements[num].id,
                 visibility: visibility
             }
             results.problemElements.push(completeProblemElement)
@@ -123,7 +124,7 @@ async function testWebsite(checkboxes, filter, speed, colors) {
 
     // Callback function for the mutation observer and storing messages
     let problemMessages = []
-    function callback(num, mutations, eventType) {
+    function callback(mutations, eventType) {
         switch (mutations[0].type) {
             case "attributes":
                 // Filter attributes
@@ -131,6 +132,7 @@ async function testWebsite(checkboxes, filter, speed, colors) {
                 let newAttributes = mutations[0].target.getAttribute(mutations[0].attributeName)
                 let mutationTarget = mutations[0].target
                 let mutationAttributeName = mutations[0].attributeName
+
                 if (filter["cssFilter"] && (mutationAttributeName === "class") && (getComputedStyle(mutationTarget).display != "none")) {
                     return false
                 }

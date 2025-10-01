@@ -95,15 +95,14 @@ function initiateTest() {
                 args: [getCheckboxValues(), getFilter(), getInputSpeed(), getColors()],
                 func: (...args) => testWebsite(...args)
             }).then((results) => {
-                //console.log("Successfully executed function initiateTest!")
-                //console.log(results[0].result);
-
                 const elementsWithDownEvents = results[0].result.elementsWithDownEvents
                 const formsChanged = results[0].result.formsChanged
                 const filteredDownEvents = results[0].result.filteredElements
                 const problemDownEvents = results[0].result.problemElements
                 const amountProblemDownEvents = results[0].result.problemElements.length
                 const totalDownEvents = filteredDownEvents + problemDownEvents.length
+
+                console.log(problemDownEvents)
 
                 let resultNode = document.getElementById("results")
                 let h3 = document.createElement("h3")
@@ -140,6 +139,10 @@ function initiateTest() {
                             boldText.textContent = ' Note: Element has "display:none".'
                             li.appendChild(boldText)
                         }
+                        /*
+                        li.addEventListener("click", () => {
+                            chrome.devtools.inspectedWindow.eval()
+                        })*/
                         ol.appendChild(li)
                     })
 
