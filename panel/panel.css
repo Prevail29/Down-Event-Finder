@@ -33,11 +33,14 @@ fieldset {
 
 .colors div {
     columns: 2;
+    margin-left: 0.5em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
 }
 
-#primaryHighlightColor,
-#primaryProblemColor {
-    margin-bottom: 1em;
+#primaryProblemColor,
+#primaryWarningColor {
+    margin-bottom: 0.5em;
 }
 
 #initiateButton {
@@ -50,4 +53,15 @@ fieldset {
 
 #initiateButton:hover {
     background-color: #CFCFCF;
+}
+
+#results ol li {
+    color: black;
+}
+
+#results ol li:hover {
+    text-decoration: underline;
+    color: #00008B;
+    background-color: #FBFFC2;
+    cursor: pointer;
 }

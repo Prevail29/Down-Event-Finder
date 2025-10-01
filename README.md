@@ -28,7 +28,7 @@ Options allow for further customization:
 
 ## Development
 1. Clone the repository.
-2. Open your IDE and open the newly cloned repository (default name: pointer-cancellation-extension).
+2. Open your IDE and open the newly cloned repository (default name: down-events-finder).
 3. You can now start making changes.
 
 Websites for testing the extension can be found on [GitHub](https://github.com/Prevail29/pointer_website_examples) as well.
