@@ -139,10 +139,16 @@ function initiateTest() {
                             boldText.textContent = ' Note: Element has "display:none".'
                             li.appendChild(boldText)
                         }
-                        /*
                         li.addEventListener("click", () => {
-                            chrome.devtools.inspectedWindow.eval()
-                        })*/
+                            chrome.devtools.inspectedWindow.eval(`(function(){
+                                const element = document.getElementById(${JSON.stringify(obj.id)})
+                                inspect(element)
+                                element.scrollIntoView()})()`, (result, error) => {
+                                if (error) {
+                                    console.error(error)
+                                }
+                            })
+                        })
                         ol.appendChild(li)
                     })
 
