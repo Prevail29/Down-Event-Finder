@@ -92,7 +92,6 @@ async function testWebsite(checkboxes, filter, speed, colors) {
             element.after(shadowContainerBox)
             const shadowBox = shadowContainerBox.attachShadow({ mode: "open" })
             shadowBox.appendChild(divBox)
-
             element.setAttribute("style", `outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;`)
         } catch (error) {
             console.log("The following element caused a problem: ", element)
@@ -108,10 +107,10 @@ async function testWebsite(checkboxes, filter, speed, colors) {
             let visibility = !(getComputedStyle(importantElements[num]).display === "none")
             let elementClone = importantElements[num].cloneNode(false)
             let problemElement = elementClone.outerHTML
-            importantElements[num].id = "DownEventsFinder-" + num
+            importantElements[num].setAttribute("data-def-id", `DownEventsFinder-${num}`) 
             const completeProblemElement = {
                 problemElement: problemElement,
-                id: importantElements[num].id,
+                dataId: importantElements[num].getAttribute("data-def-id"),
                 visibility: visibility
             }
             results.problemElements.push(completeProblemElement)

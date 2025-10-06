@@ -141,11 +141,12 @@ function initiateTest() {
                         }
                         li.addEventListener("click", () => {
                             chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.getElementById(${JSON.stringify(obj.id)})
+                                const element = document.querySelector('[data-def-id=${obj.dataId}]')
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                                 if (error) {
-                                    console.error(error)
+                                    console.log(error)
+                                    window.alert("Element was not found in DOM!")
                                 }
                             })
                         })
