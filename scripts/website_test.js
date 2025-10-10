@@ -1,15 +1,14 @@
-async function testWebsite(checkboxes, filter, speed, colors) {
-    // Get important elements of the current website 
-    const importantElements = document.body.querySelectorAll(".importantPointerCancellationElement")
+async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
+    // Get important elements of the current website
     const formElements = document.body.querySelectorAll(`textarea, input`)
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let results = {
-        elementsWithDownEvents: importantElements.length,
         formsChanged: false,
-        filteredElements: 0,
+        filteredElements: [],
         problemElements: []
     }
-    if (importantElements.length == 0) return results
+
+    if (downEvents.length === 0) return results
 
     // Create mutation observer
     const target = document
@@ -43,8 +42,7 @@ async function testWebsite(checkboxes, filter, speed, colors) {
     })
 
     // Function for creating problem box and info
-    function createCSS(num, eventType) {
-        const element = importantElements[num]
+    function createCSS(element, eventType) {
         const shadowContainerBox = document.createElement("div")
         shadowContainerBox.classList.add("problemPointerArea")
         shadowContainerBox.style.display = "inline"
@@ -100,25 +98,22 @@ async function testWebsite(checkboxes, filter, speed, colors) {
     }
 
     // Function for handling mutations
-    function inspectMutation(num, mutation, eventType) {
+    function inspectMutation(mutation, element, eventType) {
         let validity = callback(mutation, eventType)
-        observer.disconnect()
         if (validity) {
-            let visibility = !(getComputedStyle(importantElements[num]).display === "none")
-            let elementClone = importantElements[num].cloneNode(false)
+            let visibility = !(getComputedStyle(element).display === "none")
+            let elementClone = element.cloneNode(false)
             let problemElement = elementClone.outerHTML
-            importantElements[num].setAttribute("data-def-id", `DownEventsFinder-${num}`) 
             const completeProblemElement = {
                 problemElement: problemElement,
-                dataId: importantElements[num].getAttribute("data-def-id"),
+                dataId: element.getAttribute("data-downEventsFinder-id"),
                 visibility: visibility
             }
             results.problemElements.push(completeProblemElement)
-            createCSS(num, eventType)
+            createCSS(element, eventType)
         } else {
-            results.filteredElements++
+            results.filteredElements.push(element.getAttribute("data-downEventsFinder-id"))
         }
-        observer.observe(target, config)
     }
 
     // Callback function for the mutation observer and storing messages
@@ -263,19 +258,6 @@ async function testWebsite(checkboxes, filter, speed, colors) {
         }
     }
 
-    // Defining important variables
-    let i = 0
-    let mutation = undefined
-
-    console.log("Elements with down-events: ", importantElements)
-
-    // Mark all elements with at least one down-event
-    if (checkboxes["marking"]) {
-        importantElements.forEach((element) => {
-            element.setAttribute("style", `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important`)
-        })
-    }
-
     // Check whether dialog exists and if yes, open all of them
     let htmlDialog = document.querySelectorAll("dialog")
     if (htmlDialog.length > 0) {
@@ -289,45 +271,48 @@ async function testWebsite(checkboxes, filter, speed, colors) {
         })
     }
 
+    // Mark all elements with at least one down-event
+    if (checkboxes["marking"]) {
+        downEvents.forEach((obj) => {
+            let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
+            element.setAttribute("style", `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important`)
+        })
+    }
+
     // Testing the elements for down events
-    // Slow test
     if (checkboxes["slow"]) {
-        let hasDownEvent = undefined
+        // Slow test
+        let i = 0
         await new Promise(resolve => {
             function loopThroughElements() {
                 setTimeout(() => {
-                    hasDownEvent = false
-                    importantElements[i].scrollIntoView()
-                    importantElements[i].setAttribute("style", `outline: 5px dashed ${primaryWarningColor} !important; border: 5px dashed ${secondaryWarningColor} !important;`)
+                    let element = document.querySelector(`[data-downEventsFinder-id=${downEvents[i].elementId}]`)
+                    let eventListeners = downEvents[i].downEvent
+                    if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
 
-                    observer.observe(target, config)
+                    element.scrollIntoView()
+                    element.setAttribute("style", `outline: 5px solid ${primaryWarningColor} !important; border: 5px solid ${secondaryWarningColor} !important;`)
 
-                    importantElements[i].dispatchEvent(mousedown)
-                    mutation = observer.takeRecords()
-                    if (mutation.length > 0) {
-                        inspectMutation(i, mutation, "mousedown")
-                        if (filter["multipleDownEvents"]) hasDownEvent = true
-                    }
-
-                    if (!hasDownEvent) {
-                        importantElements[i].dispatchEvent(touchstart)
-                        mutation = observer.takeRecords()
-                        if (mutation.length > 0) {
-                            inspectMutation(i, mutation, "touchstart")
-                            if (filter["multipleDownEvents"]) hasDownEvent = true
+                    eventListeners.forEach(event => {
+                        observer.observe(target, config)
+                        switch (event) {
+                            case "mousedown":
+                                element.dispatchEvent(mousedown)
+                                break;
+                            case "touchstart":
+                                element.dispatchEvent(touchstart)
+                                break;
+                            case "pointerdown":
+                                element.dispatchEvent(pointerdown)
+                                break;
                         }
-                    }
-
-                    if (!hasDownEvent) {
-                        importantElements[i].dispatchEvent(pointerdown)
-                        mutation = observer.takeRecords()
-                        if (mutation.length > 0) inspectMutation(i, mutation, "pointerdown")
-                    }
-
-                    observer.disconnect()
+                        let mutation = observer.takeRecords()
+                        observer.disconnect()
+                        if (mutation.length > 0) inspectMutation(mutation, element, event)
+                    })
                     i++
 
-                    if (i < importantElements.length) loopThroughElements()
+                    if (i < downEvents.length) loopThroughElements()
                     else resolve()
                 }, speed)
             }
@@ -336,35 +321,29 @@ async function testWebsite(checkboxes, filter, speed, colors) {
     }
     else {
         // Regular test
-        for (; i < importantElements.length; i++) {
-            observer.observe(target, config)
+        downEvents.forEach(obj => {
+            let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
+            let eventListeners = obj.downEvent
+            if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
 
-            importantElements[i].dispatchEvent(mousedown)
-            mutation = observer.takeRecords()
-            if (mutation.length > 0) {
-                inspectMutation(i, mutation, "mousedown")
-                if (filter["multipleDownEvents"]) {
-                    observer.disconnect()
-                    continue
+            eventListeners.forEach(event => {
+                observer.observe(target, config)
+                switch (event) {
+                    case "mousedown":
+                        element.dispatchEvent(mousedown)
+                        break;
+                    case "touchstart":
+                        element.dispatchEvent(touchstart)
+                        break;
+                    case "pointerdown":
+                        element.dispatchEvent(pointerdown)
+                        break;
                 }
-            }
-
-            importantElements[i].dispatchEvent(touchstart)
-            mutation = observer.takeRecords()
-            if (mutation.length > 0) {
-                inspectMutation(i, mutation, "touchstart")
-                if (filter["multipleDownEvents"]) {
-                    observer.disconnect()
-                    continue
-                }
-            }
-
-            importantElements[i].dispatchEvent(pointerdown)
-            mutation = observer.takeRecords()
-            if (mutation.length > 0) inspectMutation(i, mutation, "pointerdown")
-
-            observer.disconnect()
-        }
+                let mutation = observer.takeRecords()
+                observer.disconnect()
+                if (mutation.length > 0) inspectMutation(mutation, element, event)
+            })
+        })
     }
 
     // Check whether nodes have been deleted
@@ -490,8 +469,9 @@ async function testWebsite(checkboxes, filter, speed, colors) {
         }
     }
 
+    // Close dialogs 
     if (htmlDialog.length > 0) htmlDialog.forEach((dialog) => dialog.close())
 
-    //console.log("Results:", results)
+    // console.log("Results:", results)
     return results
 }
