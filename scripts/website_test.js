@@ -1,11 +1,17 @@
 async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     // Get important elements of the current website
+    const State = Object.freeze({
+        UNOBSERVABLE: "unobservable",
+        WARNING: "warning",
+        PROBLEM: "problem"
+    })
     const formElements = document.body.querySelectorAll(`textarea, input`)
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let results = {
         formsChanged: false,
-        filteredElements: [],
-        problemElements: []
+        unobservableDownEvents: [],
+        warningDownEvents: [],
+        problemDownEvents: []
     }
 
     if (downEvents.length === 0) return results
@@ -97,28 +103,10 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         }
     }
 
-    // Function for handling mutations
-    function inspectMutation(mutation, element, eventType) {
-        let validity = callback(mutation, eventType)
-        if (validity) {
-            let visibility = !(getComputedStyle(element).display === "none")
-            let elementClone = element.cloneNode(false)
-            let problemElement = elementClone.outerHTML
-            const completeProblemElement = {
-                problemElement: problemElement,
-                dataId: element.getAttribute("data-downEventsFinder-id"),
-                visibility: visibility
-            }
-            results.problemElements.push(completeProblemElement)
-            createCSS(element, eventType)
-        } else {
-            results.filteredElements.push(element.getAttribute("data-downEventsFinder-id"))
-        }
-    }
-
     // Callback function for the mutation observer and storing messages
     let problemMessages = []
     function callback(mutations, eventType) {
+        if (mutations.length === 0) return State.UNOBSERVABLE
         switch (mutations[0].type) {
             case "attributes":
                 // Filter attributes
@@ -128,24 +116,24 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 let mutationAttributeName = mutations[0].attributeName
 
                 if (filter["cssFilter"] && (mutationAttributeName === "class") && (getComputedStyle(mutationTarget).display != "none")) {
-                    return false
+                    return State.WARNING
                 }
                 if (filter["ariaExpandedFilter"] && (mutationAttributeName === "aria-expanded")) {
-                    return false
+                    return State.WARNING
                 }
                 if ((filter["cssFilter"]) && (mutationAttributeName === "style")) {
                     if (((oldAttributes) && !oldAttributes.includes("display")) || ((newAttributes) && !newAttributes.includes("display"))) {
-                        return false
+                        return State.WARNING
                     }
                 }
                 if (filter["dataFilter"] && (mutationAttributeName.toUpperCase().includes("DATA"))) {
-                    return false
+                    return State.WARNING
                 }
                 if (filter["falsyFilter"] && (!oldAttributes && !newAttributes) && (mutationTarget.tagName != "DIALOG") && (mutationTarget.tagName != "INPUT")) {
-                    return false
+                    return State.WARNING
                 }
                 if (filter["sameAttributeFilter"] && (oldAttributes === newAttributes) && (mutationTarget.tagName != "INPUT")) {
-                    return false
+                    return State.WARNING
                 }
                 let sanitizedTarget = mutationTarget.cloneNode(false)
                 problemMessages.push([`Attribute change:`, `Caused by: ${eventType}`,
@@ -158,7 +146,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 let addedNodes = mutations[0].addedNodes
                 let removedNodes = mutations[0].removedNodes
                 if ((filter["headTitleFilter"]) && (nodeName == "HEAD" || nodeName == "TITLE")) {
-                    return false
+                    return State.WARNING
                 }
                 let addedNodesCopy = []
                 let removedNodesCopy = []
@@ -178,14 +166,14 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 let oldValue = mutations[0].oldValue
                 let newValue = mutations[0].target.data
                 if ((filter["sameCDFilter"]) && (oldValue == newValue)) {
-                    return false
+                    return State.WARNING
                 }
                 problemMessages.push([`Character Data change`, `Caused by: ${eventType}`,
                     `Old Value: ${oldValue.trim()}`, `New Value: ${newValue.trim()}`])
                 break;
         }
-        //console.log("Observed change!\nChange: ", mutations[0], "\nElement number: ", num, "\nTriggered by: ", eventType, "\nMutation Type: ", mutations[0].type)
-        return true
+        // console.log("Observed change!\nChange: ", mutations[0], "\nElement number: ", num, "\nTriggered by: ", eventType, "\nMutation Type: ", mutations[0].type)
+        return State.PROBLEM
     }
 
     // Form element test
@@ -308,7 +296,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                         }
                         let mutation = observer.takeRecords()
                         observer.disconnect()
-                        if (mutation.length > 0) inspectMutation(mutation, element, event)
+                        if (mutation.length > 0) callback(mutation, element, event)
                     })
                     i++
 
@@ -323,10 +311,19 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         // Regular test
         downEvents.forEach(obj => {
             let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
+            let elementTagName = element.tagName
             let eventListeners = obj.downEvent
             if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
-
+            const completeElement = {
+                element: elementTagName,
+                dataId: obj.elementId,
+                eventListeners: undefined,
+                visibility: !(getComputedStyle(element).display === "none"),
+                state: undefined
+            }
+            
             eventListeners.forEach(event => {
+                completeElement.eventListeners = event
                 observer.observe(target, config)
                 switch (event) {
                     case "mousedown":
@@ -341,15 +338,28 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 }
                 let mutation = observer.takeRecords()
                 observer.disconnect()
-                if (mutation.length > 0) inspectMutation(mutation, element, event)
+                let state = callback(mutation, element, event)
+                switch (state) {
+                    case State.UNOBSERVABLE:
+                        results.unobservableDownEvents.push(completeElement)
+                        break;
+                    case State.WARNING:        
+                        results.warningDownEvents.push(completeElement)
+                        break;
+                    case State.PROBLEM:
+                        createCSS(element, event)
+                        results.problemDownEvents.push(completeElement)
+                        break;
+                }
+                completeElement.state = state
             })
         })
     }
 
     // Check whether nodes have been deleted
-    if (document.querySelectorAll(".problemPointerArea").length != results.problemElements.length) {
+    if (document.querySelectorAll(".problemPointerArea").length != results.problemDownEvents.length) {
         let warning = document.createElement("h1")
-        warning.textContent = "Pointer Cancellation Extension - Warning: Nodes have been deleted or changed!"
+        warning.textContent = "Down-Events Finder - Warning: Nodes have been deleted or changed!"
         warning.style.textAlign = "center"
         warning.style.background = "white"
         warning.style.color = "red"
@@ -383,7 +393,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         }
     }
 
-    if (results.problemElements.length > 0) {
+    if (results.problemDownEvents.length > 0) {
         // Create info 
         const shadowContainerHelp = document.createElement("div")
 

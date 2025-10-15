@@ -14,6 +14,7 @@ function showTestingSpeed() {
     }
 }
 
+// Function for checking / unchecking all filters at once 
 function checkAllFilter() {
     let allFilter = document.querySelectorAll('div details.filter input:not([id*="checkAll"])')
     if (document.getElementById("checkAll").checked) {
@@ -60,8 +61,10 @@ function getFilter() {
     return filters
 }
 
+// Boolean if test has already been run once on website
 let testRan = false
-// Mark all Elements with at least one down-event
+
+// Retrieve all down-events from website
 function getDownEventElements() {
     if (testRan) console.log("Test already ran!")
     else {
@@ -96,7 +99,7 @@ function getDownEventElements() {
     }
 }
 
-// Variable for checking if test has already been run once 
+// Test website for changes 
 function initiateTest(downEvents) {
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
@@ -109,12 +112,15 @@ function initiateTest(downEvents) {
         }).then((results) => {
             const elementsWithDownEvents = downEvents.length
             const formsChanged = results[0].result.formsChanged
-            const filteredDownEvents = results[0].result.filteredElements
-            const problemDownEvents = results[0].result.problemElements
-            const amountProblemDownEvents = results[0].result.problemElements.length
-            const totalDownEvents = filteredDownEvents.length + problemDownEvents.length
+            const unobservableDownEvents = results[0].result.unobservableDownEvents
+            const warningDownEvents = results[0].result.warningDownEvents
+            const problemDownEvents = results[0].result.problemDownEvents
+            const totalDownEvents = unobservableDownEvents.length + warningDownEvents.length + problemDownEvents.length
+            const allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
 
-            console.log(filteredDownEvents)
+            console.log("Unobservable Down-Events: ", unobservableDownEvents)
+            console.log("Warning Down-Events: ", warningDownEvents)
+            console.log("Problem Down-Events: ", problemDownEvents)
 
             let resultNode = document.getElementById("results")
             let h3 = document.createElement("h3")
@@ -123,7 +129,8 @@ function initiateTest(downEvents) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
-                h3.textContent = `Website has ${elementsWithDownEvents} element${elementsWithDownEvents === 1 ? "" : "s"} causing a down-event.`
+                h3.textContent = `This Website has ${elementsWithDownEvents} element${elementsWithDownEvents === 1 ? "" : "s"} causing 
+                                  ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
 
                 if (formsChanged) {
@@ -133,24 +140,50 @@ function initiateTest(downEvents) {
                     resultNode.appendChild(h4Forms)
                 }
 
-                h4TotalAmount = document.createElement("h4")
-                h4TotalAmount.textContent = `There ${totalDownEvents === 1 ? "was" : "were"} ${totalDownEvents} observed down-event${totalDownEvents === 1 ? "" : "s"}`
+                let divUnobservable = document.createElement("div")
+                divUnobservable.id = "resultsUnobservable"
+                let h4Unobservable = document.createElement("h4")
+                h4Unobservable.textContent = `${unobservableDownEvents.length} down-event${unobservableDownEvents.length === 1 ? " was" : "s were"} unobservable`
+                divUnobservable.appendChild(h4Unobservable)
+                let listUnobservable = document.createElement("ol")
 
-                let h4Filtered = document.createElement("h4")
-                h4Filtered.textContent = `${filteredDownEvents.length} down-event${filteredDownEvents.length === 1 ? " was" : "s were"} filtered`
+                let divWarning = document.createElement("div")
+                divWarning.id = "resultsWarning"
+                let h4Warning = document.createElement("h4")
+                h4Warning.textContent = `${warningDownEvents.length} down-event${warningDownEvents.length === 1 ? "" : "s"} caused minor changes`
+                divWarning.appendChild(h4Warning)
+                let listWarning = document.createElement("ol")
 
-                let h4Remaining = document.createElement("h4")
-                h4Remaining.textContent = `${amountProblemDownEvents} down-event${amountProblemDownEvents === 1 ? " remains" : "s remain"}${amountProblemDownEvents === 0 ? "" : ":"}`
+                let divProblem = document.createElement("div")
+                divProblem.id = "resultsProblem"
+                let h4Problem = document.createElement("h4")
+                h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems${problemDownEvents.length === 0 ? "" : ":"}`
+                divProblem.appendChild(h4Problem)
+                let listProblem = document.createElement("ol")
 
-                let ol = document.createElement("ol")
-                problemDownEvents.forEach((obj) => {
+                allDownEvents.forEach((obj) => {
                     let li = document.createElement("li")
-                    li.textContent = obj.problemElement
+                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListeners + ")."
                     if (!obj.visibility) {
-                        let boldText = document.createElement("b")
-                        boldText.textContent = ' Note: Element has "display:none".'
-                        li.appendChild(boldText)
+                        let invisibleHintText = document.createElement("b")
+                        invisibleHintText.textContent = ' Element has "display:none".'
+                        li.appendChild(invisibleHintText)
                     }
+                    chrome.devtools.inspectedWindow.eval(`(function(){
+                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
+                                if(element) return true
+                                else return false})()`, (result, error) => {
+                        if (error) {
+                            console.log(error)
+                        } else {
+                            if (!result){
+                                let notExisitingText = document.createElement("b")
+                                notExisitingText.textContent += ' Element is not in DOM!'
+                                notExisitingText.style.color = "red"
+                                li.appendChild(notExisitingText)
+                            }
+                        }
+                    })
                     li.addEventListener("click", () => {
                         chrome.devtools.inspectedWindow.eval(`(function(){
                                 const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
@@ -162,12 +195,23 @@ function initiateTest(downEvents) {
                             }
                         })
                     })
-                    ol.appendChild(li)
+                    switch (obj.state) {
+                        case "unobservable":
+                            listUnobservable.appendChild(li)
+                            break;
+                        case "warning":
+                            listWarning.appendChild(li)
+                            break;
+                        case "problem":
+                            listProblem.appendChild(li)
+                            break;
+                    }
                 })
-                resultNode.appendChild(h4TotalAmount)
-                resultNode.appendChild(h4Filtered)
-                resultNode.appendChild(h4Remaining)
-                resultNode.appendChild(ol)
+                divUnobservable.appendChild(listUnobservable)
+                divWarning.appendChild(listWarning)
+                divProblem.appendChild(listProblem)
+
+                resultNode.append(divUnobservable, divWarning, divProblem)
             }
         })
     })
