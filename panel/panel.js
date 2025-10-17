@@ -1,7 +1,12 @@
+let allDownEvents = undefined
+
 // Add event listeners to buttons
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
+document.getElementById("mousedownResults").addEventListener("click", (event) => displayResults(event, "mousedown"))
+document.getElementById("pointerdownResults").addEventListener("click", (event) => displayResults(event, "pointerdown"))
+document.getElementById("touchstartResults").addEventListener("click", (event) => displayResults(event, "touchstart"))
 
 // Functions for panel
 function showTestingSpeed() {
@@ -116,19 +121,20 @@ function initiateTest(downEvents) {
             const warningDownEvents = results[0].result.warningDownEvents
             const problemDownEvents = results[0].result.problemDownEvents
             const totalDownEvents = unobservableDownEvents.length + warningDownEvents.length + problemDownEvents.length
-            const allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
+            allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
 
             console.log("Unobservable Down-Events: ", unobservableDownEvents)
             console.log("Warning Down-Events: ", warningDownEvents)
             console.log("Problem Down-Events: ", problemDownEvents)
 
-            let resultNode = document.getElementById("results")
+            let resultNode = document.getElementsByClassName("testResults")[0]
             let h3 = document.createElement("h3")
 
             if (elementsWithDownEvents === 0 || elementsWithDownEvents == undefined) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
+                document.getElementsByClassName("displayResults")[0].style.display = ""
                 h3.textContent = `This Website has ${elementsWithDownEvents} element${elementsWithDownEvents === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
@@ -176,7 +182,7 @@ function initiateTest(downEvents) {
                         if (error) {
                             console.log(error)
                         } else {
-                            if (!result){
+                            if (!result) {
                                 let notExisitingText = document.createElement("b")
                                 notExisitingText.textContent += ' Element is not in DOM!'
                                 notExisitingText.style.color = "red"
@@ -215,4 +221,30 @@ function initiateTest(downEvents) {
             }
         })
     })
+}
+
+function displayResults(event, downEvent) {
+    let checkbox = event.srcElement.checked
+    if (checkbox) {
+        // Add style and set display to inline for pointerAreas 
+        // Only add stlye to warnings and unobservables if "marking" is checked 
+        console.log("Elements are visible")
+    } else {
+        let targetedElements = allDownEvents.filter(element => element.eventListeners === downEvent)
+        console.log(targetedElements)
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(targetedElements)} 
+            elements.forEach((obj) => {
+                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
+                    const element = document.querySelector(selector)
+                    element.setAttribute("style", "")
+                    if(obj.state === "problem"){
+                        let problemAreaElement = element.nextElementSibling
+                        problemAreaElement.style.display = "none"
+                    }
+            })
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    }
 }

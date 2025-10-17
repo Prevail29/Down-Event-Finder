@@ -66,10 +66,12 @@
             <p>Filters allow for fine-tuning the observable results:</p>
             <ul>
                 <li>If a filter is checked, the selected option will <b>not</b> be observed.</li>
-                <li>If a filter is unchecked, the selected option will be observed and will appear in the results area.</li>
+                <li>If a filter is unchecked, the selected option will be observed and will appear in the results area.
+                </li>
             </ul>
             <p>Changes to the filters need to be applied <b>before</b> the test is run!<br>
-            The default settings are recommended, and changes should only be made in very specific circumstances.</p>
+                The default settings are recommended, and changes should only be made in very specific circumstances.
+            </p>
         </details>
     </div>
     <br>
@@ -99,7 +101,18 @@
     </div>
     <hr>
     <h2>Results</h2>
-    <div id="results"></div>
+    <div id="results">
+        <div class="displayResults" style="display: none;">
+            <span>Display Results:</span>
+            <input type="checkbox" id="mousedownResults" name="mousedownResults" checked>
+            <label for="mousedownResults">Mousedown</label>
+            <input type="checkbox" id="pointerdownResults" name="pointerdownResults" checked>
+            <label for="pointerdownResults">Pointerdown</label>
+            <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
+            <label for="touchstartResults">Touchstart</label>
+        </div>
+        <div class="testResults"></div>
+    </div>
 </body>
 
 <script type="text/javascript" src="panel.js"></script>
