@@ -263,7 +263,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     if (checkboxes["marking"]) {
         downEvents.forEach((obj) => {
             let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
-            element.setAttribute("style", `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important`)
+            element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
         })
     }
 
@@ -381,6 +381,8 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
             for (let k = 0; k < formElements.length; k++) {
                 if (firstValues[k] != secondValues[k]) {
                     formElements[k].setAttribute("style", `outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;`)
+                    let elementId = "DownEventsFinder-FormElement-" + k
+                    formElements[k].setAttribute("data-downEventsFinder-form-id", elementId)
                     results.formsChanged = true
                 }
             }

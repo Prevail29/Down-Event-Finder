@@ -4,9 +4,11 @@ let allDownEvents = undefined
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
-document.getElementById("mousedownResults").addEventListener("click", (event) => displayResults(event, "mousedown"))
-document.getElementById("pointerdownResults").addEventListener("click", (event) => displayResults(event, "pointerdown"))
-document.getElementById("touchstartResults").addEventListener("click", (event) => displayResults(event, "touchstart"))
+document.getElementById("mousedownResults").addEventListener("click", (event) => displayDownEvents(event, "mousedown", getColors()))
+document.getElementById("pointerdownResults").addEventListener("click", (event) => displayDownEvents(event, "pointerdown", getColors()))
+document.getElementById("touchstartResults").addEventListener("click", (event) => displayDownEvents(event, "touchstart", getColors()))
+document.getElementById("formResults").addEventListener("click", (event) => displayFormMarkings(event, getColors()))
+document.getElementById("warningsResult").addEventListener("click", (event) => displayOnlyWarnings(event, getColors()))
 
 // Functions for panel
 function showTestingSpeed() {
@@ -134,7 +136,7 @@ function initiateTest(downEvents) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
-                document.getElementsByClassName("displayResults")[0].style.display = ""
+                document.getElementsByClassName("displayResultsSettings")[0].style.display = ""
                 h3.textContent = `This Website has ${elementsWithDownEvents} element${elementsWithDownEvents === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
@@ -144,6 +146,9 @@ function initiateTest(downEvents) {
                     h4Forms.textContent = "Forms changed on this website"
                     h4Forms.style.color = "red"
                     resultNode.appendChild(h4Forms)
+                    let formResultsCheckbox = document.getElementById("formResults")
+                    formResultsCheckbox.style.display = ""
+                    formResultsCheckbox.nextElementSibling.style.display = ""  
                 }
 
                 let divUnobservable = document.createElement("div")
@@ -223,15 +228,36 @@ function initiateTest(downEvents) {
     })
 }
 
-function displayResults(event, downEvent) {
-    let checkbox = event.srcElement.checked
+function displayDownEvents(event, downEvent, colors) {
+    const checkbox = event.srcElement.checked
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    const marking = document.getElementById("marking").checked
+    const warningsOnly = document.getElementById("warningsResult").checked
+    const targetedElements = allDownEvents.filter(element => element.eventListeners === downEvent)
     if (checkbox) {
         // Add style and set display to inline for pointerAreas 
         // Only add stlye to warnings and unobservables if "marking" is checked 
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(targetedElements)} 
+            elements.forEach((obj) => {
+                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
+                    const element = document.querySelector(selector)
+                    if (obj.state != "problem" && ${marking}){
+                        let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                        element.setAttribute("style", styleAttribute)
+                    }
+                    if(obj.state === "problem" && !${warningsOnly}){
+                        let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
+                        element.setAttribute("style", styleAttribute)
+                        let problemAreaElement = element.nextElementSibling
+                        problemAreaElement.style.display = "inline"
+                    }
+            })
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
         console.log("Elements are visible")
     } else {
-        let targetedElements = allDownEvents.filter(element => element.eventListeners === downEvent)
-        console.log(targetedElements)
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(targetedElements)} 
             elements.forEach((obj) => {
@@ -242,6 +268,80 @@ function displayResults(event, downEvent) {
                         let problemAreaElement = element.nextElementSibling
                         problemAreaElement.style.display = "none"
                     }
+            })
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    }
+}
+
+function displayFormMarkings(event, colors) {
+    const checkbox = event.srcElement.checked
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    console.log("Form Results")
+    if (checkbox) {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+            const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
+            targetFormElements.forEach((element) => {
+                element.setAttribute("style", "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;")
+            })
+            if(fileInputs){
+                fileInputs.forEach((input) => {
+                    input.setAttribute("style", "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;")    
+                })
+            }
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    } else {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+            const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
+            targetFormElements.forEach((element) => {
+                element.setAttribute("style", "")
+            })
+            if(fileInputs){
+                fileInputs.forEach((input) => {
+                    input.setAttribute("style", "")    
+                })
+            }
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    }
+}
+
+function displayOnlyWarnings(event, colors) {
+    const checkbox = event.srcElement.checked
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    const targetedElements = allDownEvents.filter(element => element.state === "problem")
+    console.log(targetedElements)
+    if (checkbox) {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(targetedElements)} 
+            elements.forEach((obj) => {
+                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
+                    const element = document.querySelector(selector)
+                    element.setAttribute("style", "")
+                    if(obj.state === "problem"){
+                        let problemAreaElement = element.nextElementSibling
+                        problemAreaElement.style.display = "none"
+                    }
+            })
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    } else {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(targetedElements)} 
+            elements.forEach((obj) => {
+                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
+                    const element = document.querySelector(selector)
+                    let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
+                    element.setAttribute("style", styleAttribute)
+                    let problemAreaElement = element.nextElementSibling
+                    problemAreaElement.style.display = "inline"
             })
         })()`, (result, error) => {
             if (error) console.error("Error:", error)

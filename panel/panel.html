@@ -102,14 +102,23 @@
     <hr>
     <h2>Results</h2>
     <div id="results">
-        <div class="displayResults" style="display: none;">
-            <span>Display Results:</span>
-            <input type="checkbox" id="mousedownResults" name="mousedownResults" checked>
-            <label for="mousedownResults">Mousedown</label>
-            <input type="checkbox" id="pointerdownResults" name="pointerdownResults" checked>
-            <label for="pointerdownResults">Pointerdown</label>
-            <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
-            <label for="touchstartResults">Touchstart</label>
+        <div class="displayResultsSettings" style="display: none;">
+            <details>
+                <summary>Change Results Display</summary>
+                <span>Down-Events:</span>
+                <input type="checkbox" id="mousedownResults" name="mousedownResults" checked>
+                <label for="mousedownResults">Mousedown</label>
+                <input type="checkbox" id="pointerdownResults" name="pointerdownResults" checked>
+                <label for="pointerdownResults">Pointerdown</label>
+                <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
+                <label for="touchstartResults">Touchstart</label>
+                <br>
+                <span>Miscellaneous:</span>
+                <input type="checkbox" id="warningsResult" name="warningsResult">
+                <label for="warningsResult">Only display warnings</label>
+                <input type="checkbox" id="formResults" name="formResults" style="display: none;" checked>
+                <label for="formResults" style="display: none;">Form Markings</label>
+            </details>
         </div>
         <div class="testResults"></div>
     </div>
