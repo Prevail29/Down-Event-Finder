@@ -118,6 +118,7 @@ function initiateTest(downEvents) {
             func: (...args) => testWebsite(...args)
         }).then((results) => {
             const elementsWithDownEvents = downEvents.length
+            const eventListenersSum = downEvents.map(({downEvent}) => downEvent).flat().length
             const formsChanged = results[0].result.formsChanged
             const unobservableDownEvents = results[0].result.unobservableDownEvents
             const warningDownEvents = results[0].result.warningDownEvents
@@ -140,7 +141,7 @@ function initiateTest(downEvents) {
                 h3.textContent = `This Website has ${elementsWithDownEvents} element${elementsWithDownEvents === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
-
+                
                 if (formsChanged) {
                     h4Forms = document.createElement("h4")
                     h4Forms.textContent = "Forms changed on this website"
@@ -148,7 +149,14 @@ function initiateTest(downEvents) {
                     resultNode.appendChild(h4Forms)
                     let formResultsCheckbox = document.getElementById("formResults")
                     formResultsCheckbox.style.display = ""
-                    formResultsCheckbox.nextElementSibling.style.display = ""  
+                    formResultsCheckbox.nextElementSibling.style.display = ""
+                }
+
+                if (eventListenersSum > totalDownEvents){
+                    let duplicateEventListeners = eventListenersSum - totalDownEvents 
+                    h4Duplicates = document.createElement("h4")
+                    h4Duplicates.textContent = `${duplicateEventListeners} duplicate down-events were cut`
+                    resultNode.appendChild(h4Duplicates)
                 }
 
                 let divUnobservable = document.createElement("div")
@@ -168,13 +176,13 @@ function initiateTest(downEvents) {
                 let divProblem = document.createElement("div")
                 divProblem.id = "resultsProblem"
                 let h4Problem = document.createElement("h4")
-                h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems${problemDownEvents.length === 0 ? "" : ":"}`
+                h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems`
                 divProblem.appendChild(h4Problem)
                 let listProblem = document.createElement("ol")
 
                 allDownEvents.forEach((obj) => {
                     let li = document.createElement("li")
-                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListeners + ")."
+                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + ")."
                     if (!obj.visibility) {
                         let invisibleHintText = document.createElement("b")
                         invisibleHintText.textContent = ' Element has "display:none".'
@@ -233,10 +241,9 @@ function displayDownEvents(event, downEvent, colors) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     const marking = document.getElementById("marking").checked
     const warningsOnly = document.getElementById("warningsResult").checked
-    const targetedElements = allDownEvents.filter(element => element.eventListeners === downEvent)
+    const targetedElements = allDownEvents.filter(element => element.eventListener === downEvent)
     if (checkbox) {
-        // Add style and set display to inline for pointerAreas 
-        // Only add stlye to warnings and unobservables if "marking" is checked 
+        // Set problemInfoBoxes display to none for all
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(targetedElements)} 
             elements.forEach((obj) => {
@@ -249,14 +256,13 @@ function displayDownEvents(event, downEvent, colors) {
                     if(obj.state === "problem" && !${warningsOnly}){
                         let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
                         element.setAttribute("style", styleAttribute)
-                        let problemAreaElement = element.nextElementSibling
-                        problemAreaElement.style.display = "inline"
+                        let problemInfoBoxElement = element.nextElementSibling
+                        problemInfoBoxElement.style.display = "inline"
                     }
             })
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
-        console.log("Elements are visible")
     } else {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(targetedElements)} 
@@ -265,8 +271,8 @@ function displayDownEvents(event, downEvent, colors) {
                     const element = document.querySelector(selector)
                     element.setAttribute("style", "")
                     if(obj.state === "problem"){
-                        let problemAreaElement = element.nextElementSibling
-                        problemAreaElement.style.display = "none"
+                        let problemInfoBoxElement = element.nextElementSibling
+                        problemInfoBoxElement.style.display = "none"
                     }
             })
         })()`, (result, error) => {
@@ -316,7 +322,6 @@ function displayOnlyWarnings(event, colors) {
     const checkbox = event.srcElement.checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     const targetedElements = allDownEvents.filter(element => element.state === "problem")
-    console.log(targetedElements)
     if (checkbox) {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(targetedElements)} 
@@ -324,11 +329,13 @@ function displayOnlyWarnings(event, colors) {
                     let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
                     const element = document.querySelector(selector)
                     element.setAttribute("style", "")
-                    if(obj.state === "problem"){
-                        let problemAreaElement = element.nextElementSibling
-                        problemAreaElement.style.display = "none"
-                    }
             })
+            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
+            if(problemInfoBoxes){
+                problemInfoBoxes.forEach((obj) => {
+                    obj.style.display = "none"
+                })
+            }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
@@ -340,9 +347,13 @@ function displayOnlyWarnings(event, colors) {
                     const element = document.querySelector(selector)
                     let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
                     element.setAttribute("style", styleAttribute)
-                    let problemAreaElement = element.nextElementSibling
-                    problemAreaElement.style.display = "inline"
             })
+            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
+            if(problemInfoBoxes){
+                problemInfoBoxes.forEach((obj) => {
+                    obj.style.display = "inline"
+                })
+            }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })

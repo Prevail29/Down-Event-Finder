@@ -50,7 +50,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     // Function for creating problem box and info
     function createCSS(element, eventType) {
         const shadowContainerBox = document.createElement("div")
-        shadowContainerBox.classList.add("problemPointerArea")
+        shadowContainerBox.classList.add("problemInfoBox")
         shadowContainerBox.style.display = "inline"
 
         // Create problem box
@@ -313,17 +313,8 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
             let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
             let elementTagName = element.tagName
             let eventListeners = obj.downEvent
-            if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
-            const completeElement = {
-                element: elementTagName,
-                dataId: obj.elementId,
-                eventListeners: undefined,
-                visibility: !(getComputedStyle(element).display === "none"),
-                state: undefined
-            }
-            
+            eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
             eventListeners.forEach(event => {
-                completeElement.eventListeners = event
                 observer.observe(target, config)
                 switch (event) {
                     case "mousedown":
@@ -338,12 +329,20 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 }
                 let mutation = observer.takeRecords()
                 observer.disconnect()
-                let state = callback(mutation, element, event)
+                let state = callback(mutation, event)
+                let completeElement = {
+                    element: elementTagName,
+                    dataId: obj.elementId,
+                    eventListener: event,
+                    visibility: !(getComputedStyle(element).display === "none"),
+                    state: state
+                }
+                //if (filter["multipleDownEvents"] && eventListeners.length > 1 && state === State.PROBLEM) 
                 switch (state) {
                     case State.UNOBSERVABLE:
                         results.unobservableDownEvents.push(completeElement)
                         break;
-                    case State.WARNING:        
+                    case State.WARNING:
                         results.warningDownEvents.push(completeElement)
                         break;
                     case State.PROBLEM:
@@ -351,13 +350,12 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                         results.problemDownEvents.push(completeElement)
                         break;
                 }
-                completeElement.state = state
             })
         })
     }
 
     // Check whether nodes have been deleted
-    if (document.querySelectorAll(".problemPointerArea").length != results.problemDownEvents.length) {
+    if (document.querySelectorAll(".problemInfoBox").length != results.problemDownEvents.length) {
         let warning = document.createElement("h1")
         warning.textContent = "Down-Events Finder - Warning: Nodes have been deleted or changed!"
         warning.style.textAlign = "center"
@@ -446,20 +444,20 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
 
         // Event handler for button
         let z = 0
-        for (const { shadowRoot } of document.querySelectorAll("div.problemPointerArea")) {
+        for (const { shadowRoot } of document.querySelectorAll("div.problemInfoBox")) {
             let button = shadowRoot.querySelector("div button.infoButton")
             let problemList = document.createElement("ul")
             problemList.style.fontFamily = "Arial"
             problemList.style.fontSize = "small"
-            problemList.classList.add("problemPointerAreaText")
+            problemList.classList.add("problemInfoBoxText")
             problemMessages[z].forEach((text) => {
                 let problemText = document.createElement("li")
                 problemText.textContent = text
                 problemList.appendChild(problemText)
             })
             button.addEventListener("click", () => {
-                if (divHelp.querySelectorAll(".problemPointerAreaText").length != 0) {
-                    divHelp.querySelectorAll(".problemPointerAreaText").forEach((element) => element.remove())
+                if (divHelp.querySelectorAll(".problemInfoBoxText").length != 0) {
+                    divHelp.querySelectorAll(".problemInfoBoxText").forEach((element) => element.remove())
                 }
                 if (divHelp.style.display == "none") {
                     divHelp.prepend(problemList)
