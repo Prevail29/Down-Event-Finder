@@ -105,8 +105,12 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
 
     // Callback function for the mutation observer and storing messages
     let problemMessages = []
-    function callback(mutations, eventType) {
+    function callback(mutations, eventType, eventListeners) {
         if (mutations.length === 0) return State.UNOBSERVABLE
+        if (filter["multipleDownEvents"]){
+            let indexEvent = eventListeners.indexOf(eventType)
+            if (eventListeners.length > 1 && indexEvent != 0) return State.WARNING
+        }
         switch (mutations[0].type) {
             case "attributes":
                 // Filter attributes
@@ -259,13 +263,10 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         })
     }
 
-    // Mark all elements with at least one down-event
-    if (checkboxes["marking"]) {
-        downEvents.forEach((obj) => {
-            let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
-            element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
-        })
-    }
+    downEvents.forEach((obj) => {
+        let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
+        element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
+    })
 
     // Testing the elements for down events
     if (checkboxes["slow"]) {
@@ -329,7 +330,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 }
                 let mutation = observer.takeRecords()
                 observer.disconnect()
-                let state = callback(mutation, event)
+                let state = callback(mutation, event, eventListeners)
                 let completeElement = {
                     element: elementTagName,
                     dataId: obj.elementId,
@@ -337,7 +338,6 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                     visibility: !(getComputedStyle(element).display === "none"),
                     state: state
                 }
-                //if (filter["multipleDownEvents"] && eventListeners.length > 1 && state === State.PROBLEM) 
                 switch (state) {
                     case State.UNOBSERVABLE:
                         results.unobservableDownEvents.push(completeElement)

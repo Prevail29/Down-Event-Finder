@@ -48,7 +48,6 @@ function getInputSpeed() {
 
 function getCheckboxValues() {
     let checkboxes = {
-        marking: document.getElementById("marking").checked,
         forms: document.getElementById("form").checked,
         slow: document.getElementById("slow").checked,
     }
@@ -151,6 +150,7 @@ function initiateTest(downEvents) {
                     resultNode.appendChild(h4Forms)
                     let formResultsCheckbox = document.getElementById("formResults")
                     formResultsCheckbox.style.display = ""
+                    formResultsCheckbox.previousElementSibling.style.display = ""
                     formResultsCheckbox.nextElementSibling.style.display = ""
                 }
 
@@ -244,8 +244,6 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
     const checkboxPointerdown = document.getElementById("pointerdownResults").checked
     const checkboxTouchstart = document.getElementById("touchstartResults").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
-    const marking = document.getElementById("marking").checked
-    const warningsOnly = document.getElementById("warningsResult").checked
     let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
     if (checkbox) {
         // Needs to be implemented
@@ -257,12 +255,12 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                 if (value.some((element) => element.eventListener === "${checkboxDownEvent}")){
                     let checkboxElementState = value.find((element) => element.eventListener === "${checkboxDownEvent}").state
                     if (value.length === 1){
-                        if(checkboxElementState === "problem" && !${warningsOnly}){
+                        if(checkboxElementState === "problem"){
                             let problemInfoBoxElement = element.nextElementSibling
                             problemInfoBoxElement.style.display = "inline"
                             let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
                             element.setAttribute("style", styleAttribute)
-                        } else if (checkboxElementState != "problem" && ${marking}) {
+                        } else if (checkboxElementState != "problem") {
                             let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
                             element.setAttribute("style", styleAttribute)
                         }
@@ -271,7 +269,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                         value.forEach((element) => {
                             if (element.eventListener != "${checkboxDownEvent}" && element.state === "problem") otherProblemElements.push(element.eventListener)
                         })
-                        if (checkboxElementState === "problem" && !${warningsOnly}){
+                        if (checkboxElementState === "problem"){
                             let problemInfoBoxElement = element.nextElementSibling
                             if (otherProblemElements.length > 0) {
                                 switch ("${checkboxDownEvent}"){
@@ -287,7 +285,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                             let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
                             element.setAttribute("style", styleAttribute)
                             problemInfoBoxElement.style.display = "inline"
-                        } else if (checkboxElementState != "problem" && ${marking}) {
+                        } else if (checkboxElementState != "problem") {
                             if (otherProblemElements.length === 0) {
                                 let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
                                 element.setAttribute("style", styleAttribute)

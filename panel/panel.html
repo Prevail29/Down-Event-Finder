@@ -21,9 +21,6 @@
                 <label for="speed">Testing speed (in milliseconds)</label>
                 <input type="number" id="speed" name="speed" required value="10">
             </div>
-            <input type="checkbox" id="marking" name="marking" checked>
-            <label for="marking">Mark all elements with down-events</label>
-            <br>
             <input type="checkbox" id="form" name="form" checked>
             <label for="form">Test form elements (input and textarea)</label>
         </fieldset>
@@ -113,9 +110,15 @@
                 <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
                 <label for="touchstartResults">Touchstart</label>
                 <br>
-                <span>Miscellaneous:</span>
-                <input type="checkbox" id="warningsResult" name="warningsResult">
-                <label for="warningsResult">Only display warnings</label>
+                <span>State:</span>
+                <input type="checkbox" id="problemsResult" name="problemsResult" checked>
+                <label for="problemsResult">Problems</label> 
+                <input type="checkbox" id="warningsResult" name="warningsResult" checked>
+                <label for="warningsResult">Warnings</label>
+                <input type="checkbox" id="unobservableResults" name="unobservableResults" checked>
+                <label for="unobservableResults">Unobservables</label>
+                <br>
+                <span style="display: none;">Forms:</span>
                 <input type="checkbox" id="formResults" name="formResults" style="display: none;" checked>
                 <label for="formResults" style="display: none;">Form Markings</label>
             </details>
