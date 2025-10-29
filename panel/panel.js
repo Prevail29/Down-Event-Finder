@@ -5,11 +5,16 @@ let allDownEvents = undefined
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
+
 document.getElementById("mousedownResults").addEventListener("click", (event) => displayDownEvents(event, "mousedown", getColors()))
 document.getElementById("pointerdownResults").addEventListener("click", (event) => displayDownEvents(event, "pointerdown", getColors()))
 document.getElementById("touchstartResults").addEventListener("click", (event) => displayDownEvents(event, "touchstart", getColors()))
+
+document.getElementById("problemResult").addEventListener("click", (event) => displayState(event, "problem", getColors()))
+document.getElementById("warningResult").addEventListener("click", (event) => displayState(event, "warning", getColors()))
+document.getElementById("unobservableResult").addEventListener("click", (event) => displayState(event, "unobservable", getColors()))
+
 document.getElementById("formResults").addEventListener("click", (event) => displayFormMarkings(event, getColors()))
-document.getElementById("warningsResult").addEventListener("click", (event) => displayOnlyWarnings(event, getColors()))
 
 // Functions for panel
 function showTestingSpeed() {
@@ -252,8 +257,8 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             for (const [key, value] of Object.entries(elements)) {
                 let selector = '[data-downEventsFinder-id=' + key + ']'
                 const element = document.querySelector(selector)
-                if (value.some((element) => element.eventListener === "${checkboxDownEvent}")){
-                    let checkboxElementState = value.find((element) => element.eventListener === "${checkboxDownEvent}").state
+                if (value.some((obj) => obj.eventListener === "${checkboxDownEvent}")){
+                    let checkboxElementState = value.find((obj) => obj.eventListener === "${checkboxDownEvent}").state
                     if (value.length === 1){
                         if(checkboxElementState === "problem"){
                             let problemInfoBoxElement = element.nextElementSibling
@@ -323,7 +328,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             for (const [key, value] of Object.entries(elements)) {
                 let selector = '[data-downEventsFinder-id=' + key + ']'
                 const element = document.querySelector(selector)
-                if (value.some((element) => element.eventListener === "${checkboxDownEvent}")){
+                if (value.some((obj) => obj.eventListener === "${checkboxDownEvent}")){
                     let checkboxElementState = value.find((element) => element.eventListener === "${checkboxDownEvent}").state
                     if (value.length === 1){
                         element.setAttribute("style", "")
@@ -367,30 +372,17 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
 }
 
 // Needs to be reworked
-function displayOnlyWarnings(event, colors) {
+function displayState(event, checkboxState, colors) {
     const checkbox = event.srcElement.checked
+    const checkboxProblem = document.getElementById("problemResult").checked
+    const checkboxWarning = document.getElementById("warningResult").checked
+    const checkboxUnobservable = document.getElementById("unobservableResult").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
-    const targetedElements = allDownEvents.filter(element => element.state === "problem")
+    let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
     if (checkbox) {
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            let elements = ${JSON.stringify(targetedElements)} 
-            elements.forEach((obj) => {
-                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
-                    const element = document.querySelector(selector)
-                    element.setAttribute("style", "")
-            })
-            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
-            if(problemInfoBoxes){
-                problemInfoBoxes.forEach((obj) => {
-                    obj.style.display = "none"
-                })
-            }
-        })()`, (result, error) => {
-            if (error) console.error("Error:", error)
-        })
-    } else {
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            let elements = ${JSON.stringify(targetedElements)} 
+        /*
+        Old approach
+        let elements = ${JSON.stringify(targetedElements)} 
             elements.forEach((obj) => {
                     let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
                     const element = document.querySelector(selector)
@@ -402,6 +394,57 @@ function displayOnlyWarnings(event, colors) {
                 problemInfoBoxes.forEach((obj) => {
                     obj.style.display = "inline"
                 })
+            }
+        */
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(groupedDownEvents)}
+            console.log("Elements", elements)
+            console.log("Elements with ${checkboxState} state are now shown")
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    } else {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(groupedDownEvents)}
+            console.log("Elements", elements)
+            console.log("Elements with ${checkboxState} state are now hidden")
+            for (const [key, value] of Object.entries(elements)) {
+                let selector = '[data-downEventsFinder-id=' + key + ']'
+                const element = document.querySelector(selector)
+                const highestState = element.dataset.downeventsfinderState
+                if(value.some((obj) => obj.state === "${checkboxState}")){
+                    if(value.length === 1){
+                        element.setAttribute("style", "")
+                    } else {
+                        let allStates = value.map(obj => obj.state)
+                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
+                        let checkboxStateWarning = (allStates.includes("warning")) ? ${checkboxWarning} : undefined
+                        let checkboxStateUnobservable = (allStates.includes("unobservable")) ? ${checkboxUnobservable} : undefined
+                        if("${checkboxState}" === "problem"){
+                            if((typeof checkboxStateWarning === "boolean" && checkboxStateWarning) || 
+                               (typeof checkboxStateUnobservable === "boolean" && checkboxStateUnobservable)){
+                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                                element.setAttribute("style", styleAttribute)
+                            } else element.setAttribute("style", "")
+                        } 
+                        if("${checkboxState}" === "warning") {
+                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
+                               (checkboxStateUnobservable === undefined || !checkboxStateUnobservable)) element.setAttribute("style", "")
+                        }   
+                        if("${checkboxState}" === "unobservable") {
+                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
+                               (checkboxStateWarning === undefined || !checkboxStateWarning)) element.setAttribute("style", "")
+                        }
+                    }
+                }
+            }
+            if("${checkboxState}" === "problem"){
+                let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
+                if(problemInfoBoxes){
+                    problemInfoBoxes.forEach((obj) => {
+                        obj.style.display = "none"
+                    })
+                }
             }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)

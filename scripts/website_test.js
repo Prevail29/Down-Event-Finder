@@ -97,6 +97,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
             const shadowBox = shadowContainerBox.attachShadow({ mode: "open" })
             shadowBox.appendChild(divBox)
             element.setAttribute("style", `outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;`)
+            element.setAttribute("data-downeventsfinder-state", State.PROBLEM)
         } catch (error) {
             console.log("The following element caused a problem: ", element)
             console.error("Error:", error)
@@ -107,7 +108,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     let problemMessages = []
     function callback(mutations, eventType, eventListeners) {
         if (mutations.length === 0) return State.UNOBSERVABLE
-        if (filter["multipleDownEvents"]){
+        if (filter["multipleDownEvents"]) {
             let indexEvent = eventListeners.indexOf(eventType)
             if (eventListeners.length > 1 && indexEvent != 0) return State.WARNING
         }
@@ -263,11 +264,6 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         })
     }
 
-    downEvents.forEach((obj) => {
-        let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
-        element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
-    })
-
     // Testing the elements for down events
     if (checkboxes["slow"]) {
         // Slow test
@@ -275,7 +271,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         await new Promise(resolve => {
             function loopThroughElements() {
                 setTimeout(() => {
-                    let element = document.querySelector(`[data-downEventsFinder-id=${downEvents[i].elementId}]`)
+                    let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
                     let eventListeners = downEvents[i].downEvent
                     if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
 
@@ -311,7 +307,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     else {
         // Regular test
         downEvents.forEach(obj => {
-            let element = document.querySelector(`[data-downEventsFinder-id=${obj.elementId}]`)
+            let element = document.querySelector(`[data-downeventsfinder-id=${obj.elementId}]`)
             let elementTagName = element.tagName
             let eventListeners = obj.downEvent
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
@@ -340,9 +336,17 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 }
                 switch (state) {
                     case State.UNOBSERVABLE:
+                        if (element.dataset.downeventsfinderState != "problem" && element.dataset.downeventsfinderState != "warning") {
+                            element.setAttribute("data-downeventsfinder-state", State.UNOBSERVABLE)
+                            element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
+                        }
                         results.unobservableDownEvents.push(completeElement)
                         break;
                     case State.WARNING:
+                        if (element.dataset.downeventsfinderState != "problem") {
+                            element.setAttribute("data-downeventsfinder-state", State.WARNING)
+                            element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
+                        }
                         results.warningDownEvents.push(completeElement)
                         break;
                     case State.PROBLEM:
@@ -380,7 +384,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                 if (firstValues[k] != secondValues[k]) {
                     formElements[k].setAttribute("style", `outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;`)
                     let elementId = "DownEventsFinder-FormElement-" + k
-                    formElements[k].setAttribute("data-downEventsFinder-form-id", elementId)
+                    formElements[k].setAttribute("data-downeventsfinder-form-id", elementId)
                     results.formsChanged = true
                 }
             }
