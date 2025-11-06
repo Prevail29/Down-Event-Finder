@@ -102,6 +102,14 @@
         <div class="displayResultsSettings" style="display: none;">
             <details>
                 <summary>Change Results Display</summary>
+                <span>State:</span>
+                <input type="checkbox" id="problemResult" name="problemResult" checked>
+                <label for="problemResult">Problem</label> 
+                <input type="checkbox" id="warningResult" name="warningResult" checked>
+                <label for="warningResult">Warning</label>
+                <input type="checkbox" id="unobservableResult" name="unobservableResult" checked>
+                <label for="unobservableResult">Unobservable</label>
+                <br>
                 <span>Down-Events:</span>
                 <input type="checkbox" id="mousedownResults" name="mousedownResults" checked>
                 <label for="mousedownResults">Mousedown</label>
@@ -110,17 +118,9 @@
                 <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
                 <label for="touchstartResults">Touchstart</label>
                 <br>
-                <span>State:</span>
-                <input type="checkbox" id="problemResult" name="problemResult" checked>
-                <label for="problemResult">Problems</label> 
-                <input type="checkbox" id="warningResult" name="warningResult" checked>
-                <label for="warningResult">Warnings</label>
-                <input type="checkbox" id="unobservableResult" name="unobservableResult" checked>
-                <label for="unobservableResult">Unobservables</label>
-                <br>
                 <span style="display: none;">Forms:</span>
                 <input type="checkbox" id="formResults" name="formResults" style="display: none;" checked>
-                <label for="formResults" style="display: none;">Form Markings</label>
+                <label for="formResults" style="display: none;">Marking</label>
             </details>
         </div>
         <div class="testResults"></div>

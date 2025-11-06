@@ -96,7 +96,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
             element.after(shadowContainerBox)
             const shadowBox = shadowContainerBox.attachShadow({ mode: "open" })
             shadowBox.appendChild(divBox)
-            element.setAttribute("style", `outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;`)
+            element.setAttribute("style", `border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;`)
             element.setAttribute("data-downeventsfinder-state", State.PROBLEM)
         } catch (error) {
             console.log("The following element caused a problem: ", element)
@@ -382,7 +382,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
         if (firstValues.length == secondValues.length) {
             for (let k = 0; k < formElements.length; k++) {
                 if (firstValues[k] != secondValues[k]) {
-                    formElements[k].setAttribute("style", `outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;`)
+                    formElements[k].setAttribute("style", `border: 5px dotted ${primaryProblemColor} !important; outline: 5px dotted ${secondaryProblemColor} !important;`)
                     let elementId = "DownEventsFinder-FormElement-" + k
                     formElements[k].setAttribute("data-downeventsfinder-form-id", elementId)
                     results.formsChanged = true

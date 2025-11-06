@@ -243,38 +243,161 @@ function initiateTest(downEvents) {
     })
 }
 
-function displayDownEvents(event, checkboxDownEvent, colors) {
+function displayState(event, checkboxState, colors) {
     const checkbox = event.srcElement.checked
+    const checkboxProblem = document.getElementById("problemResult").checked
+    const checkboxWarning = document.getElementById("warningResult").checked
+    const checkboxUnobservable = document.getElementById("unobservableResult").checked
     const checkboxMousedown = document.getElementById("mousedownResults").checked
     const checkboxPointerdown = document.getElementById("pointerdownResults").checked
     const checkboxTouchstart = document.getElementById("touchstartResults").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
     if (checkbox) {
-        // Needs to be implemented
+        // Combined 
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(groupedDownEvents)}
+            for (const [key, value] of Object.entries(elements)) {
+                let selector = '[data-downEventsFinder-id=' + key + ']'
+                const element = document.querySelector(selector)
+                if(value.some((obj) => obj.state === "${checkboxState}")){
+                    let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                    let filteredEventListeners = value.filter((obj) => obj.state === "${checkboxState}")
+                                                      .map(obj => obj.eventListener)
+                    console.log("Filtered EventListeners:", filteredEventListeners)
+                    if("${checkboxState}" === "problem"){
+                        styleAttribute = 'border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;'
+                        filteredEventListeners.forEach((eventListener) => {
+                            switch(eventListener){
+                                case "touchstart":
+                                    if(${checkboxTouchstart}){
+                                        let problemInfoBoxElement = element.nextElementSibling
+                                        element.setAttribute("style", styleAttribute)
+                                        problemInfoBoxElement.style.display = "inline"
+                                    }
+                                    break;
+                                case "pointerdown":
+                                    if(${checkboxPointerdown}){
+                                        let problemInfoBoxElement = element.nextElementSibling
+                                        element.setAttribute("style", styleAttribute)
+                                        if (filteredEventListeners.includes("touchstart")) problemInfoBoxElement = element.nextElementSibling.nextElementSibling
+                                        problemInfoBoxElement.style.display = "inline"
+                                    }
+                                    break;
+                                case "mousedown":
+                                    if(${checkboxMousedown}){
+                                        let problemInfoBoxElement = element.nextElementSibling
+                                        element.setAttribute("style", styleAttribute)
+                                        if (filteredEventListeners.length === 2) problemInfoBoxElement = element.nextElementSibling.nextElementSibling
+                                        if (filteredEventListeners.length === 3) problemInfoBoxElement = element.nextElementSibling.nextElementSibling.nextElementSibling
+                                        problemInfoBoxElement.style.display = "inline"
+                                    }
+                                    break;
+                            }
+                        })
+                    } else {
+                        let allStates = value.map(obj => obj.state)
+                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
+                        if(checkboxStateProblem === undefined || !checkboxStateProblem){
+                            filteredEventListeners.forEach((eventListener) => {
+                                switch(eventListener){
+                                    case "touchstart":
+                                        if(${checkboxTouchstart}) element.setAttribute("style", styleAttribute)
+                                        break;
+                                    case "pointerdown":
+                                        if(${checkboxPointerdown}) element.setAttribute("style", styleAttribute)
+                                        break;
+                                    case "mousedown":
+                                        if(${checkboxMousedown}) element.setAttribute("style", styleAttribute)
+                                        break;
+                                }
+                            })
+                        } 
+                    }
+                }
+            }
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    } else {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let elements = ${JSON.stringify(groupedDownEvents)}
+            for (const [key, value] of Object.entries(elements)) {
+                let selector = '[data-downEventsFinder-id=' + key + ']'
+                const element = document.querySelector(selector)
+                if(value.some((obj) => obj.state === "${checkboxState}")){
+                    if(value.length === 1){
+                        element.setAttribute("style", "")
+                    } else {
+                        let allStates = value.map(obj => obj.state)
+                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
+                        let checkboxStateWarning = (allStates.includes("warning")) ? ${checkboxWarning} : undefined
+                        let checkboxStateUnobservable = (allStates.includes("unobservable")) ? ${checkboxUnobservable} : undefined
+                        if("${checkboxState}" === "problem"){
+                            if((typeof checkboxStateWarning === "boolean" && checkboxStateWarning) || 
+                               (typeof checkboxStateUnobservable === "boolean" && checkboxStateUnobservable)){
+                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                                element.setAttribute("style", styleAttribute)
+                            } else element.setAttribute("style", "")
+                        } 
+                        if("${checkboxState}" === "warning") {
+                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
+                               (checkboxStateUnobservable === undefined || !checkboxStateUnobservable)) element.setAttribute("style", "")
+                        }   
+                        if("${checkboxState}" === "unobservable") {
+                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
+                               (checkboxStateWarning === undefined || !checkboxStateWarning)) element.setAttribute("style", "")
+                        }
+                    }
+                }
+            }
+            if("${checkboxState}" === "problem"){
+                let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
+                if(problemInfoBoxes){
+                    problemInfoBoxes.forEach((obj) => {
+                        obj.style.display = "none"
+                    })
+                }
+            }
+        })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+    }
+}
+
+function displayDownEvents(event, checkboxDownEvent, colors) {
+    const checkbox = event.srcElement.checked
+    const checkboxProblem = document.getElementById("problemResult").checked
+    const checkboxWarning = document.getElementById("warningResult").checked
+    const checkboxUnobservable = document.getElementById("unobservableResult").checked
+    const checkboxMousedown = document.getElementById("mousedownResults").checked
+    const checkboxPointerdown = document.getElementById("pointerdownResults").checked
+    const checkboxTouchstart = document.getElementById("touchstartResults").checked
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
+    if (checkbox) {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)} 
             for (const [key, value] of Object.entries(elements)) {
                 let selector = '[data-downEventsFinder-id=' + key + ']'
                 const element = document.querySelector(selector)
                 if (value.some((obj) => obj.eventListener === "${checkboxDownEvent}")){
+                    let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
                     let checkboxElementState = value.find((obj) => obj.eventListener === "${checkboxDownEvent}").state
                     if (value.length === 1){
-                        if(checkboxElementState === "problem"){
+                        if(checkboxElementState === "problem" && ${checkboxProblem}){
                             let problemInfoBoxElement = element.nextElementSibling
                             problemInfoBoxElement.style.display = "inline"
-                            let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
+                            styleAttribute = 'border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;'
                             element.setAttribute("style", styleAttribute)
-                        } else if (checkboxElementState != "problem") {
-                            let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                            element.setAttribute("style", styleAttribute)
-                        }
+                        } else if (checkboxElementState === "warning" && ${checkboxWarning}) element.setAttribute("style", styleAttribute)
+                        else if (checkboxElementState === "unobservable" && ${checkboxUnobservable}) element.setAttribute("style", styleAttribute)
                     } else {
                         let otherProblemElements = [] 
                         value.forEach((element) => {
                             if (element.eventListener != "${checkboxDownEvent}" && element.state === "problem") otherProblemElements.push(element.eventListener)
                         })
-                        if (checkboxElementState === "problem"){
+                        if (checkboxElementState === "problem" && ${checkboxProblem}){
                             let problemInfoBoxElement = element.nextElementSibling
                             if (otherProblemElements.length > 0) {
                                 switch ("${checkboxDownEvent}"){
@@ -287,13 +410,13 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                                         break;
                                 }
                             }
-                            let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
+                            styleAttribute = 'border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;'
                             element.setAttribute("style", styleAttribute)
                             problemInfoBoxElement.style.display = "inline"
                         } else if (checkboxElementState != "problem") {
                             if (otherProblemElements.length === 0) {
-                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                                element.setAttribute("style", styleAttribute)
+                                if(checkboxElementState === "warning" && ${checkboxWarning}) element.setAttribute("style", styleAttribute)
+                                else if(checkboxElementState === "unobservable" && ${checkboxUnobservable}) element.setAttribute("style", styleAttribute)
                             } else {
                                 let checkboxValues = []
                                 otherProblemElements.forEach((event) => {
@@ -310,8 +433,8 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                                     }
                                 })
                                 if (!checkboxValues[0] && (checkboxValues[1] === undefined || !checkboxValues[1])){
-                                    let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                                    element.setAttribute("style", styleAttribute)
+                                    if(checkboxElementState === "warning" && ${checkboxWarning}) element.setAttribute("style", styleAttribute)
+                                    else if(checkboxElementState === "unobservable" && ${checkboxUnobservable}) element.setAttribute("style", styleAttribute)
                                 }
                             }
                         }
@@ -322,7 +445,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             if (error) console.error("Error:", error)
         })
     } else {
-        // Works as intended (hopefully)
+        // Minor bug
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)}
             for (const [key, value] of Object.entries(elements)) {
@@ -364,87 +487,6 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                         if (!${checkboxMousedown} && !${checkboxPointerdown} && !${checkboxTouchstart}) element.setAttribute("style", "")
                     }
                 } 
-            }
-        })()`, (result, error) => {
-            if (error) console.error("Error:", error)
-        })
-    }
-}
-
-// Needs to be reworked
-function displayState(event, checkboxState, colors) {
-    const checkbox = event.srcElement.checked
-    const checkboxProblem = document.getElementById("problemResult").checked
-    const checkboxWarning = document.getElementById("warningResult").checked
-    const checkboxUnobservable = document.getElementById("unobservableResult").checked
-    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
-    let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
-    if (checkbox) {
-        /*
-        Old approach
-        let elements = ${JSON.stringify(targetedElements)} 
-            elements.forEach((obj) => {
-                    let selector = '[data-downEventsFinder-id=' + obj.dataId + ']'
-                    const element = document.querySelector(selector)
-                    let styleAttribute = 'outline: 5px solid ${primaryProblemColor} !important; border: 5px solid ${secondaryProblemColor} !important;'
-                    element.setAttribute("style", styleAttribute)
-            })
-            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
-            if(problemInfoBoxes){
-                problemInfoBoxes.forEach((obj) => {
-                    obj.style.display = "inline"
-                })
-            }
-        */
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            let elements = ${JSON.stringify(groupedDownEvents)}
-            console.log("Elements", elements)
-            console.log("Elements with ${checkboxState} state are now shown")
-        })()`, (result, error) => {
-            if (error) console.error("Error:", error)
-        })
-    } else {
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            let elements = ${JSON.stringify(groupedDownEvents)}
-            console.log("Elements", elements)
-            console.log("Elements with ${checkboxState} state are now hidden")
-            for (const [key, value] of Object.entries(elements)) {
-                let selector = '[data-downEventsFinder-id=' + key + ']'
-                const element = document.querySelector(selector)
-                const highestState = element.dataset.downeventsfinderState
-                if(value.some((obj) => obj.state === "${checkboxState}")){
-                    if(value.length === 1){
-                        element.setAttribute("style", "")
-                    } else {
-                        let allStates = value.map(obj => obj.state)
-                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
-                        let checkboxStateWarning = (allStates.includes("warning")) ? ${checkboxWarning} : undefined
-                        let checkboxStateUnobservable = (allStates.includes("unobservable")) ? ${checkboxUnobservable} : undefined
-                        if("${checkboxState}" === "problem"){
-                            if((typeof checkboxStateWarning === "boolean" && checkboxStateWarning) || 
-                               (typeof checkboxStateUnobservable === "boolean" && checkboxStateUnobservable)){
-                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                                element.setAttribute("style", styleAttribute)
-                            } else element.setAttribute("style", "")
-                        } 
-                        if("${checkboxState}" === "warning") {
-                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
-                               (checkboxStateUnobservable === undefined || !checkboxStateUnobservable)) element.setAttribute("style", "")
-                        }   
-                        if("${checkboxState}" === "unobservable") {
-                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
-                               (checkboxStateWarning === undefined || !checkboxStateWarning)) element.setAttribute("style", "")
-                        }
-                    }
-                }
-            }
-            if("${checkboxState}" === "problem"){
-                let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
-                if(problemInfoBoxes){
-                    problemInfoBoxes.forEach((obj) => {
-                        obj.style.display = "none"
-                    })
-                }
             }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
