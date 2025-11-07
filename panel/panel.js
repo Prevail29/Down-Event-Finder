@@ -189,6 +189,7 @@ function initiateTest(downEvents) {
 
                 allDownEvents.forEach((obj) => {
                     let li = document.createElement("li")
+                    li.classList.add("resultListEntry")
                     li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + ")."
                     if (!obj.visibility) {
                         let invisibleHintText = document.createElement("b")
@@ -264,7 +265,6 @@ function displayState(event, checkboxState, colors) {
                     let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
                     let filteredEventListeners = value.filter((obj) => obj.state === "${checkboxState}")
                                                       .map(obj => obj.eventListener)
-                    console.log("Filtered EventListeners:", filteredEventListeners)
                     if("${checkboxState}" === "problem"){
                         styleAttribute = 'border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;'
                         filteredEventListeners.forEach((eventListener) => {
@@ -296,9 +296,26 @@ function displayState(event, checkboxState, colors) {
                             }
                         })
                     } else {
-                        let allStates = value.map(obj => obj.state)
-                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
-                        if(checkboxStateProblem === undefined || !checkboxStateProblem){
+                        let problemElements = [] 
+                        let displayProblem = false
+                        value.forEach((element) => {
+                            if(element.state === "problem") problemElements.push(element.eventListener)
+                        })
+                        if(problemElements.length > 0 && ${checkboxProblem}){
+                            for (const eventListener of problemElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayProblem = true
+                                    break;
+                                } else displayProblem = false
+                            }
+                        }
+                        if(!displayProblem){
                             filteredEventListeners.forEach((eventListener) => {
                                 switch(eventListener){
                                     case "touchstart":
@@ -319,6 +336,19 @@ function displayState(event, checkboxState, colors) {
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
+        let targetNode = undefined
+        switch(checkboxState){
+            case "problem":
+                targetNode = document.getElementById("resultsProblem")
+                break;
+            case "warning":
+                targetNode = document.getElementById("resultsWarning")
+                break;
+            case "unobservable":
+                targetNode = document.getElementById("resultsUnobservable")
+                break;
+        }
+        targetNode.classList.remove("hidden")
     } else {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)}
@@ -329,24 +359,77 @@ function displayState(event, checkboxState, colors) {
                     if(value.length === 1){
                         element.setAttribute("style", "")
                     } else {
-                        let allStates = value.map(obj => obj.state)
-                        let checkboxStateProblem = (allStates.includes("problem")) ? ${checkboxProblem} : undefined
-                        let checkboxStateWarning = (allStates.includes("warning")) ? ${checkboxWarning} : undefined
-                        let checkboxStateUnobservable = (allStates.includes("unobservable")) ? ${checkboxUnobservable} : undefined
+                        let problemElements = [] 
+                        let warningElements = []
+                        let unobservableElements = []
+                        value.forEach((element) => {
+                            switch(element.state){
+                                case "problem":
+                                    problemElements.push(element.eventListener)
+                                    break;
+                                case "warning": 
+                                    warningElements.push(element.eventListener)
+                                    break;
+                                case "unobservable":
+                                    unobservableElements.push(element.eventListener)
+                                    break;
+                            }
+                        })
+                        let displayProblem = false
+                        let displayWarning = false
+                        let displayUnobservable = false
+                        if(problemElements.length > 0 && ${checkboxProblem}){
+                            for (const eventListener of problemElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayProblem = true
+                                    break;
+                                } else displayProblem = false
+                            }
+                        }
+                        if(warningElements.length > 0 && ${checkboxWarning}){
+                            for (const eventListener of warningElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayWarning = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayWarning = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayWarning = true
+                                    break;
+                                } else displayWarning = false
+                            }
+                        }
+                        if(unobservableElements.length > 0 && ${checkboxUnobservable}){
+                            for (const eventListener of unobservableElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayUnobservable = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayUnobservable = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayUnobservable = true
+                                    break;
+                                } else displayUnobservable = false
+                            }
+                        }
                         if("${checkboxState}" === "problem"){
-                            if((typeof checkboxStateWarning === "boolean" && checkboxStateWarning) || 
-                               (typeof checkboxStateUnobservable === "boolean" && checkboxStateUnobservable)){
-                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                                element.setAttribute("style", styleAttribute)
-                            } else element.setAttribute("style", "")
+                            let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                            if(displayWarning || displayUnobservable) element.setAttribute("style", styleAttribute)
+                            else element.setAttribute("style", "")
                         } 
                         if("${checkboxState}" === "warning") {
-                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
-                               (checkboxStateUnobservable === undefined || !checkboxStateUnobservable)) element.setAttribute("style", "")
+                            if(!displayProblem && !displayUnobservable) element.setAttribute("style", "")
                         }   
                         if("${checkboxState}" === "unobservable") {
-                            if((checkboxStateProblem === undefined || !checkboxStateProblem) && 
-                               (checkboxStateWarning === undefined || !checkboxStateWarning)) element.setAttribute("style", "")
+                            if(!displayProblem && !displayWarning) element.setAttribute("style", "")
                         }
                     }
                 }
@@ -362,6 +445,19 @@ function displayState(event, checkboxState, colors) {
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
+        let targetNode = undefined
+        switch(checkboxState){
+            case "problem":
+                targetNode = document.getElementById("resultsProblem")
+                break;
+            case "warning":
+                targetNode = document.getElementById("resultsWarning")
+                break;
+            case "unobservable":
+                targetNode = document.getElementById("resultsUnobservable")
+                break;
+        }
+        targetNode.classList.add("hidden")
     }
 }
 
@@ -375,6 +471,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
     const checkboxTouchstart = document.getElementById("touchstartResults").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
+    let resultListEntries = document.querySelectorAll(".resultListEntry")
     if (checkbox) {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)} 
@@ -417,7 +514,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                             if (otherProblemElements.length === 0) {
                                 if(checkboxElementState === "warning" && ${checkboxWarning}) element.setAttribute("style", styleAttribute)
                                 else if(checkboxElementState === "unobservable" && ${checkboxUnobservable}) element.setAttribute("style", styleAttribute)
-                            } else {
+                            } else {   
                                 let checkboxValues = []
                                 otherProblemElements.forEach((event) => {
                                     switch (event){
@@ -432,7 +529,7 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                                             break; 
                                     }
                                 })
-                                if (!checkboxValues[0] && (checkboxValues[1] === undefined || !checkboxValues[1])){
+                                if (!${checkboxProblem} || (!checkboxValues[0] && (checkboxValues[1] === undefined || !checkboxValues[1]))){
                                     if(checkboxElementState === "warning" && ${checkboxWarning}) element.setAttribute("style", styleAttribute)
                                     else if(checkboxElementState === "unobservable" && ${checkboxUnobservable}) element.setAttribute("style", styleAttribute)
                                 }
@@ -443,6 +540,9 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
+        })
+        resultListEntries.forEach((obj) => {
+            if(obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.remove("hidden")
         })
     } else {
         // Minor bug
@@ -461,17 +561,76 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                         }
                     } else {
                         let otherProblemElements = [] 
+                        let otherWarningElements = []
+                        let otherUnobservableElements = []
                         value.forEach((element) => {
-                            if (element.eventListener != "${checkboxDownEvent}" && element.state === "problem") otherProblemElements.push(element.eventListener)
+                            if (element.eventListener != "${checkboxDownEvent}"){
+                                switch(element.state){
+                                    case "problem":
+                                        otherProblemElements.push(element.eventListener)
+                                        break;
+                                    case "warning": 
+                                        otherWarningElements.push(element.eventListener)
+                                        break;
+                                    case "unobservable":
+                                        otherUnobservableElements.push(element.eventListener)
+                                        break;
+                                }
+                            } 
                         })
+                        let displayProblem = false
+                        let displayWarning = false
+                        let displayUnobservable = false
+                        if(otherProblemElements.length > 0 && ${checkboxProblem}){
+                            for (const eventListener of otherProblemElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayProblem = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayProblem = true
+                                    break;
+                                } else displayProblem = false
+                            }
+                        }
+                        if(otherWarningElements.length > 0 && ${checkboxWarning}){
+                            for (const eventListener of otherWarningElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayWarning = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayWarning = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayWarning = true
+                                    break;
+                                } else displayWarning = false
+                            }
+                        }
+                        if(otherUnobservableElements.length > 0 && ${checkboxUnobservable}){
+                            for (const eventListener of otherUnobservableElements){
+                                if (eventListener === "touchstart" && ${checkboxTouchstart}){
+                                    displayUnobservable = true
+                                    break;
+                                } else if (eventListener === "pointerdown" && ${checkboxPointerdown}){
+                                    displayUnobservable = true
+                                    break;
+                                } else if (eventListener === "mousedown" && ${checkboxMousedown}){
+                                    displayUnobservable = true
+                                    break;
+                                } else displayUnobservable = false
+                            }
+                        }
                         if (checkboxElementState === "problem"){
+                            let problemInfoBoxElement = element.nextElementSibling
                             if (otherProblemElements.length === 0) {
-                                let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
-                                element.setAttribute("style", styleAttribute)
-                                let problemInfoBoxElement = element.nextElementSibling
-                                problemInfoBoxElement.style.display = "none"
+                                if(displayWarning || displayUnobservable){
+                                    let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                                    element.setAttribute("style", styleAttribute)
+                                } else element.setAttribute("style", "")
                             } else {
-                                let problemInfoBoxElement = element.nextElementSibling
                                 switch ("${checkboxDownEvent}"){
                                     case "pointerdown":
                                         if (otherProblemElements.includes("touchstart")) problemInfoBoxElement = element.nextElementSibling.nextElementSibling
@@ -481,15 +640,27 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
                                         else problemInfoBoxElement = element.nextElementSibling.nextElementSibling
                                         break;
                                 }
-                                problemInfoBoxElement.style.display = "none"
-                            }   
+                                if(!displayProblem){
+                                    if(displayWarning || displayUnobservable){
+                                        let styleAttribute = 'border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important'
+                                        element.setAttribute("style", styleAttribute)
+                                    } else element.setAttribute("style", "")
+                                } 
+                            }
+                            problemInfoBoxElement.style.display = "none"   
+                        } else if (checkboxElementState === "warning"){
+                            if(!displayProblem && !displayWarning && !displayUnobservable) element.setAttribute("style", "")
+                        } else{
+                            if(!displayProblem && !displayWarning && !displayUnobservable) element.setAttribute("style", "")
                         }
-                        if (!${checkboxMousedown} && !${checkboxPointerdown} && !${checkboxTouchstart}) element.setAttribute("style", "")
                     }
                 } 
             }
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
+        })
+        resultListEntries.forEach((obj) => {
+            if(obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.add("hidden")
         })
     }
 }
