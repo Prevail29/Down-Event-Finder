@@ -9,6 +9,7 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let results = {
         formsChanged: false,
+        changedFormElements: [],
         unobservableDownEvents: [],
         warningDownEvents: [],
         problemDownEvents: []
@@ -386,11 +387,10 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                     let elementId = "DownEventsFinder-FormElement-" + k
                     formElements[k].setAttribute("data-downeventsfinder-form-id", elementId)
                     results.formsChanged = true
+                    results.changedFormElements.push({tagName: formElements[k].tagName.toLowerCase(), type: formElements[k].type, formId: elementId})
                 }
             }
-        } else {
-            results.formsChanged = true
-        }
+        } else results.formsChanged = true
         if (results.formsChanged) {
             [...formElements].filter((input) => input.type === "file")
                 .forEach((element) => { element.setAttribute("style", `outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;`) })

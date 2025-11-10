@@ -126,6 +126,7 @@ function initiateTest(downEvents) {
             const elementsWithDownEventsLength = downEvents.length
             const eventListenersSum = downEvents.map(({ downEvent }) => downEvent).flat().length
             const formsChanged = results[0].result.formsChanged
+            const changedFormElements = results[0].result.changedFormElements
             const unobservableDownEvents = results[0].result.unobservableDownEvents
             const warningDownEvents = results[0].result.warningDownEvents
             const problemDownEvents = results[0].result.problemDownEvents
@@ -149,14 +150,36 @@ function initiateTest(downEvents) {
                 resultNode.appendChild(h3)
 
                 if (formsChanged) {
-                    h4Forms = document.createElement("h4")
-                    h4Forms.textContent = "Forms changed on this website"
+                    let formDiv = document.createElement("div")
+                    formDiv.id = ("changedFormsList")
+                    let h4Forms = document.createElement("h4")
+                    let formList = document.createElement("ol")
+                    h4Forms.textContent = "Form Elements changed!"
                     h4Forms.style.color = "red"
-                    resultNode.appendChild(h4Forms)
+                    resultNode.appendChild(formDiv)
+                    formDiv.appendChild(h4Forms)
+                    formDiv.appendChild(formList)
                     let formResultsCheckbox = document.getElementById("formResults")
                     formResultsCheckbox.style.display = ""
                     formResultsCheckbox.previousElementSibling.style.display = ""
                     formResultsCheckbox.nextElementSibling.style.display = ""
+                    changedFormElements.forEach((obj) => {
+                        let li = document.createElement("li")
+                        li.textContent = obj.tagName
+                        if (obj.tagName === "input") li.textContent += " (File Type: " + obj.type + ")"
+                        li.addEventListener("click", () => {
+                            chrome.devtools.inspectedWindow.eval(`(function(){
+                                const element = document.querySelector('[data-downeventsfinder-form-id=${obj.formId}]')
+                                inspect(element)
+                                element.scrollIntoView()})()`, (result, error) => {
+                                if (error) {
+                                    console.log(error)
+                                    window.alert("Element was not found in DOM!")
+                                }
+                            })
+                        })
+                        formList.appendChild(li)
+                    })
                 }
 
                 if (eventListenersSum > totalDownEvents) {
@@ -190,7 +213,8 @@ function initiateTest(downEvents) {
                 allDownEvents.forEach((obj) => {
                     let li = document.createElement("li")
                     li.classList.add("resultListEntry")
-                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + ")."
+                    let trimmedId = obj.dataId.replace(/\D/g, "")
+                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + "; Element-ID: " + trimmedId + ")."
                     if (!obj.visibility) {
                         let invisibleHintText = document.createElement("b")
                         invisibleHintText.textContent = ' Element has "display:none".'
@@ -244,6 +268,7 @@ function initiateTest(downEvents) {
     })
 }
 
+// Change the results depending on the selected state
 function displayState(event, checkboxState, colors) {
     const checkbox = event.srcElement.checked
     const checkboxProblem = document.getElementById("problemResult").checked
@@ -255,7 +280,6 @@ function displayState(event, checkboxState, colors) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
     if (checkbox) {
-        // Combined 
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)}
             for (const [key, value] of Object.entries(elements)) {
@@ -337,7 +361,7 @@ function displayState(event, checkboxState, colors) {
             if (error) console.error("Error:", error)
         })
         let targetNode = undefined
-        switch(checkboxState){
+        switch (checkboxState) {
             case "problem":
                 targetNode = document.getElementById("resultsProblem")
                 break;
@@ -446,7 +470,7 @@ function displayState(event, checkboxState, colors) {
             if (error) console.error("Error:", error)
         })
         let targetNode = undefined
-        switch(checkboxState){
+        switch (checkboxState) {
             case "problem":
                 targetNode = document.getElementById("resultsProblem")
                 break;
@@ -461,6 +485,7 @@ function displayState(event, checkboxState, colors) {
     }
 }
 
+// Change the results depending on the selected down-event
 function displayDownEvents(event, checkboxDownEvent, colors) {
     const checkbox = event.srcElement.checked
     const checkboxProblem = document.getElementById("problemResult").checked
@@ -542,10 +567,9 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             if (error) console.error("Error:", error)
         })
         resultListEntries.forEach((obj) => {
-            if(obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.remove("hidden")
+            if (obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.remove("hidden")
         })
     } else {
-        // Minor bug
         chrome.devtools.inspectedWindow.eval(`(function(){
             let elements = ${JSON.stringify(groupedDownEvents)}
             for (const [key, value] of Object.entries(elements)) {
@@ -660,14 +684,16 @@ function displayDownEvents(event, checkboxDownEvent, colors) {
             if (error) console.error("Error:", error)
         })
         resultListEntries.forEach((obj) => {
-            if(obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.add("hidden")
+            if (obj.innerHTML.indexOf(checkboxDownEvent) !== -1) obj.classList.add("hidden")
         })
     }
 }
 
+// Change the visibility of form markings
 function displayFormMarkings(event, colors) {
     const checkbox = event.srcElement.checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    let changedFormsList = document.getElementById("changedFormsList")
     if (checkbox) {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
@@ -683,6 +709,7 @@ function displayFormMarkings(event, colors) {
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
+        changedFormsList.classList.remove("hidden")
     } else {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
@@ -698,5 +725,6 @@ function displayFormMarkings(event, colors) {
         })()`, (result, error) => {
             if (error) console.error("Error:", error)
         })
+        changedFormsList.classList.add("hidden")
     }
 }
