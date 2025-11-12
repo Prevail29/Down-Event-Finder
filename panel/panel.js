@@ -3,6 +3,7 @@ let allDownEvents = undefined
 
 // Add event listeners to buttons
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
+document.getElementById("iterateHighlightButton").addEventListener("click", iterativelyHighlightElements)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
 
@@ -144,7 +145,8 @@ function initiateTest(downEvents) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
-                document.getElementsByClassName("displayResultsSettings")[0].style.display = ""
+                document.getElementById("iterateHighlightButton").classList.remove("hidden")
+                document.getElementById("results").classList.remove("hidden")
                 h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
@@ -727,4 +729,41 @@ function displayFormMarkings(event, colors) {
         })
         changedFormsList.classList.add("hidden")
     }
+}
+
+function iterativelyHighlightElements() {
+    chrome.devtools.inspectedWindow.eval(`(function(){
+            let i = 0
+            let downEvents = document.body.querySelectorAll("[data-downeventsfinder-id]")
+            let speed = Number(window.prompt("Enter the speed (milliseconds)", 1000))
+            while(isNaN(speed)){
+                window.alert("Enter a valid number!")
+                speed = Number(window.prompt("Enter the speed (milliseconds)"))
+            }
+            let elementOutline, elementBorder = undefined
+            function highlightElements(){
+                if (i > 0) {
+                    downEvents[i - 1].style.outline = elementOutline
+                    downEvents[i - 1].style.border = elementBorder
+                }
+                if (i < downEvents.length){
+                    let element = downEvents[i]
+                    elementOutline = element.style.outline
+                    elementBorder = element.style.border
+                    element.style.outline = "5px solid green"
+                    element.style.border = "5px solid red"
+                    element.scrollIntoView()
+                    i++
+                    setTimeout(highlightElements, speed)
+                } 
+            }
+            highlightElements()
+        })()`, (result, error) => {
+            if (error) {
+                console.error("Error:", error)
+            } else {
+                window.alert("Finished highlighting elements!")
+            }
+        }
+    )
 }
