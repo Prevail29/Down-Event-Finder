@@ -269,16 +269,19 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
     if (checkboxes["slow"]) {
         // Slow test
         let i = 0
+        let firstElement = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
+        firstElement.setAttribute("style", 'background-color: #FDFF47 !important; border: 4px solid purple !important; transform: scale(1.2);')
+        await new Promise(resolve => setTimeout(resolve, speed))
         await new Promise(resolve => {
             function loopThroughElements() {
-                setTimeout(() => {
+                if (i < downEvents.length){
                     let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
+                    let elementTagName = element.tagName
                     let eventListeners = downEvents[i].downEvent
-                    if (filter["multipleDownEvents"]) eventListeners = eventListeners.slice(0, 1)
-
-                    element.scrollIntoView()
-                    element.setAttribute("style", `outline: 5px solid ${primaryWarningColor} !important; border: 5px solid ${secondaryWarningColor} !important;`)
-
+                    eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
+                    if(i+1 < downEvents.length) document.querySelector(`[data-downeventsfinder-id=${downEvents[i+1].elementId}]`)
+                                                        .setAttribute("style", 'background-color: #FDFF47 !important; border: 4px solid purple !important; transform: scale(1.2);')
+                    element.scrollIntoView({block: "center", inline: "center"})
                     eventListeners.forEach(event => {
                         observer.observe(target, config)
                         switch (event) {
@@ -294,13 +297,38 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
                         }
                         let mutation = observer.takeRecords()
                         observer.disconnect()
-                        if (mutation.length > 0) callback(mutation, element, event)
+                        let state = callback(mutation, event, eventListeners)
+                        let completeElement = {
+                            element: elementTagName,
+                            dataId: downEvents[i].elementId,
+                            eventListener: event,
+                            visibility: !(getComputedStyle(element).display === "none"),
+                            state: state
+                        }
+                        switch (state) {
+                            case State.UNOBSERVABLE:
+                                if (element.dataset.downeventsfinderState != "problem" && element.dataset.downeventsfinderState != "warning") {
+                                    element.setAttribute("data-downeventsfinder-state", State.UNOBSERVABLE)
+                                    element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
+                                }
+                                results.unobservableDownEvents.push(completeElement)
+                                break;
+                            case State.WARNING:
+                                if (element.dataset.downeventsfinderState != "problem") {
+                                    element.setAttribute("data-downeventsfinder-state", State.WARNING)
+                                    element.setAttribute("style", `outline: 4px dashed ${secondaryWarningColor} !important; border: 4px dashed ${primaryWarningColor} !important;`)
+                                }
+                                results.warningDownEvents.push(completeElement)
+                                break;
+                            case State.PROBLEM:
+                                createCSS(element, event)
+                                results.problemDownEvents.push(completeElement)
+                                break;
+                        }
                     })
                     i++
-
-                    if (i < downEvents.length) loopThroughElements()
-                    else resolve()
-                }, speed)
+                    setTimeout(loopThroughElements, speed)
+                } else resolve()
             }
             loopThroughElements()
         })
@@ -485,7 +513,5 @@ async function testWebsite(checkboxes, filter, speed, colors, downEvents) {
 
     // Close dialogs 
     if (htmlDialog.length > 0) htmlDialog.forEach((dialog) => dialog.close())
-
-    // console.log("Results:", results)
     return results
 }

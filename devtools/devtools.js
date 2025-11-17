@@ -1,1 +1,1 @@
-chrome.devtools.panels.create("Down-Events Finder - Devtools", "icon.png", "../panel/panel.html")
+chrome.devtools.panels.create("Down-Events Finder", "icon.png", "../panel/panel.html")

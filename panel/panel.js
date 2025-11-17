@@ -734,35 +734,54 @@ function displayFormMarkings(event, colors) {
 function iterativelyHighlightElements() {
     chrome.devtools.inspectedWindow.eval(`(function(){
             let i = 0
+            let styleAttributes = []
             let downEvents = document.body.querySelectorAll("[data-downeventsfinder-id]")
+            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
             let speed = Number(window.prompt("Enter the speed (milliseconds)", 1000))
             while(isNaN(speed)){
                 window.alert("Enter a valid number!")
                 speed = Number(window.prompt("Enter the speed (milliseconds)"))
             }
-            let elementOutline, elementBorder = undefined
+            let elementOutline, elementBackground = undefined
+            downEvents.forEach((obj) => {
+                console.log(obj.style.cssText)
+                styleAttributes.push(obj.style.cssText)
+                obj.setAttribute("style", "")
+            })
+            if(problemInfoBoxes){
+                problemInfoBoxes.forEach((obj) => obj.style.display = "none")
+            }
             function highlightElements(){
                 if (i > 0) {
-                    downEvents[i - 1].style.outline = elementOutline
-                    downEvents[i - 1].style.border = elementBorder
+                    downEvents[i - 1].style.outline = ""
+                    downEvents[i - 1].style.backgroundColor = ""
+                    downEvents[i - 1].style.transform = ""
                 }
                 if (i < downEvents.length){
                     let element = downEvents[i]
-                    elementOutline = element.style.outline
-                    elementBorder = element.style.border
-                    element.style.outline = "5px solid green"
-                    element.style.border = "5px solid red"
-                    element.scrollIntoView()
+                    element.style.outline = "4px solid purple"
+                    element.style.backgroundColor = "#FDFF47"
+                    element.style.transform = "scale(1.2)"
+                    element.scrollIntoView({block: "center", inline: "center"})
                     i++
                     setTimeout(highlightElements, speed)
-                } 
+                } else {
+                    downEvents.forEach((obj) => {
+                        obj.setAttribute("style", styleAttributes[0])
+                        styleAttributes.shift()
+                    })
+                    if(problemInfoBoxes){
+                        problemInfoBoxes.forEach((obj) => obj.style.display = "inline")
+                    }
+                    window.alert("Finished highlighting elements!")
+                }
             }
             highlightElements()
         })()`, (result, error) => {
             if (error) {
                 console.error("Error:", error)
             } else {
-                window.alert("Finished highlighting elements!")
+                
             }
         }
     )
