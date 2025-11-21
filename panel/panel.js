@@ -1,5 +1,4 @@
-let elementsWithDownEvents = undefined
-let allDownEvents = undefined
+let elementsWithDownEvents, allDownEvents = undefined
 
 // Add event listeners to buttons
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
@@ -21,11 +20,8 @@ document.getElementById("formResults").addEventListener("click", (event) => disp
 function showTestingSpeed() {
     let checkbox = document.getElementById("slow").checked
     let testingSpeedField = document.querySelector("fieldset div")
-    if (checkbox) {
-        testingSpeedField.classList.remove("hidden")
-    } else {
-        testingSpeedField.classList.add("hidden")
-    }
+    if (checkbox) testingSpeedField.classList.remove("hidden")
+    else testingSpeedField.classList.add("hidden")
 }
 
 // Function for checking / unchecking all filters at once 
@@ -146,7 +142,7 @@ function initiateTest(downEvents) {
                 resultNode.appendChild(h3)
             } else {
                 document.getElementById("iterateHighlightButton").classList.remove("hidden")
-                document.getElementById("results").classList.remove("hidden")
+                document.getElementById("displayResultsOptions").classList.remove("hidden")
                 h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
@@ -161,10 +157,8 @@ function initiateTest(downEvents) {
                     resultNode.appendChild(formDiv)
                     formDiv.appendChild(h4Forms)
                     formDiv.appendChild(formList)
-                    let formResultsCheckbox = document.getElementById("formResults")
-                    formResultsCheckbox.style.display = ""
-                    formResultsCheckbox.previousElementSibling.style.display = ""
-                    formResultsCheckbox.nextElementSibling.style.display = ""
+                    let formResultsOptions = document.getElementById("formResultsOptions")
+                    formResultsOptions.classList.remove("hidden")
                     changedFormElements.forEach((obj) => {
                         let li = document.createElement("li")
                         li.textContent = obj.tagName

@@ -14,14 +14,14 @@
     <div>
         <fieldset>
             <legend>Test Behaviour</legend>
-            <input type="checkbox" id="slow" name="slow">
+            <input type="checkbox" id="slow" name="slow">  <!-- unchecked -->
             <label for="slow">Slow test</label>
             <br>
             <div class="hidden">
                 <label for="speed">Testing speed (in milliseconds)</label>
-                <input type="number" id="speed" name="speed" required value="10">
+                <input type="number" id="speed" name="speed" value="10"> <!-- 1000 -->
             </div>
-            <input type="checkbox" id="form" name="form" checked>
+            <input type="checkbox" id="form" name="form" checked> <!-- checked -->
             <label for="form">Test form elements (input and textarea)</label>
         </fieldset>
     </div>
@@ -31,31 +31,31 @@
             <summary>Filter</summary>
             <br>
             <div class="columns">
-                <input type="checkbox" id="checkAll" name="checkAll" checked>
+                <input type="checkbox" id="checkAll" name="checkAll"> 
                 <label for="checkAll">Check/Uncheck All</label>
                 <h3>General</h3>
-                <input type="checkbox" id="multipleDownEvents" name="multipleDownEvents">
+                <input type="checkbox" id="multipleDownEvents" name="multipleDownEvents"> <!-- unchecked -->
                 <label for="multipleDownEvents">Different down events on the same element</label>
                 <h3 id="attributeHeading">Attribute Filter</h3>
-                <input type="checkbox" id="cssFilter" name="cssFilter" checked>
+                <input type="checkbox" id="cssFilter" name="cssFilter" checked> <!-- checked -->
                 <label for="cssFilter">Styling</label>
                 <br>
-                <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
+                <input type="checkbox" id="falsyFilter" name="falsyFilter" checked> <!-- checked -->
                 <label for="falsyFilter">Falsy values</label>
                 <br>
-                <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
+                <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked> <!-- checked -->
                 <label for="sameAttributeFilter">Identical values</label>
                 <br>
-                <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
+                <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked> <!-- checked -->
                 <label for="ariaExpandedFilter">Aria-expanded</label>
                 <br>
-                <input type="checkbox" id="dataFilter" name="dataFilter" checked>
+                <input type="checkbox" id="dataFilter" name="dataFilter" checked> <!-- checked -->
                 <label for="dataFilter">Data</label>
                 <h3>ChildList Filter</h3>
-                <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
+                <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked> <!-- checked -->
                 <label for="headTitleFilter">Targeting Head and Title</label>
                 <h3>CharacterData Filter</h3>
-                <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
+                <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked> <!-- checked -->
                 <label for="sameCDFilter">Identical values</label>
             </div>
             <hr>
@@ -67,66 +67,70 @@
                 </li>
             </ul>
             <p>Changes to the filters need to be applied <b>before</b> the test is run!<br>
-                The default settings are recommended, and changes should only be made in very specific circumstances.
+                The default options are recommended, and changes should only be made in very specific circumstances.
             </p>
         </details>
     </div>
     <br>
     <div>
         <details class="colors">
-            <summary>Change colours</summary>
+            <summary>Colors</summary>
             <div>
-                <input type="color" id="primaryProblemColor" name="primaryProblemColor" value="#ff8400">
+                <input type="color" id="primaryProblemColor" name="primaryProblemColor"> <!-- ff8400 -->
                 <label for="primaryProblemColor">Primary problem color</label>
                 <br>
-                <input type="color" id="secondaryProblemColor" name="secondaryProblemColor" value="#0421c4">
+                <input type="color" id="secondaryProblemColor" name="secondaryProblemColor"> <!-- 0421c4 -->
                 <label for="secondaryProblemColor">Secondary problem color</label>
                 <br>
-                <input type="color" id="primaryWarningColor" name="primaryWarningColor" value="#9400D3">
+                <input type="color" id="primaryWarningColor" name="primaryWarningColor"> <!-- 9400D3 -->
                 <label for="primaryWarningColor">Primary warning color</label>
                 <br>
-                <input type="color" id="secondaryWarningColor" name="secondaryWarningColor" value="#F5F531">
+                <input type="color" id="secondaryWarningColor" name="secondaryWarningColor"> <!-- F5F531 -->
                 <label for="secondaryWarningColor">Secondary warning color</label>
-
             </div>
         </details>
     </div>
     <br>
     <div>
-        <button id="initiateButton">Start test</button>
+        <button id="initiateButton">Start Test</button>
+        <button id="saveButton">Save Options</button>
+        <button id="clear">Clear Option Storage</button>
         <button id="iterateHighlightButton" class="hidden">Iterative Highlight</button>
     </div>
-    <hr>
-    <div id="results" class="hidden">
+    <div id="results">
+        <hr>
         <h2>Results</h2>
-        <div class="displayResultsSettings">
+        <div id="displayResultsOptions" class="hidden">
             <details>
                 <summary>Change Results Display</summary>
                 <span>State:</span>
-                <input type="checkbox" id="problemResult" name="problemResult" checked>
+                <input type="checkbox" id="problemResult" name="problemResult" checked> <!-- checked -->
                 <label for="problemResult">Problem</label> 
-                <input type="checkbox" id="warningResult" name="warningResult" checked>
+                <input type="checkbox" id="warningResult" name="warningResult" checked> <!-- checked -->
                 <label for="warningResult">Warning</label>
-                <input type="checkbox" id="unobservableResult" name="unobservableResult" checked>
+                <input type="checkbox" id="unobservableResult" name="unobservableResult" checked> <!-- checked -->
                 <label for="unobservableResult">Unobservable</label>
                 <br>
                 <span>Down-Events:</span>
-                <input type="checkbox" id="mousedownResults" name="mousedownResults" checked>
-                <label for="mousedownResults">Mousedown</label>
-                <input type="checkbox" id="pointerdownResults" name="pointerdownResults" checked>
+                <input type="checkbox" id="mousedownResults" name="mousedownResults" checked> <!-- checked -->
+                <label for="mousedownResults">Mousedown</label> 
+                <input type="checkbox" id="pointerdownResults" name="pointerdownResults" checked> <!-- checked -->
                 <label for="pointerdownResults">Pointerdown</label>
-                <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
+                <input type="checkbox" id="touchstartResults" name="touchstartResults" checked> <!-- checked -->
                 <label for="touchstartResults">Touchstart</label>
                 <br>
-                <span style="display: none;">Forms:</span>
-                <input type="checkbox" id="formResults" name="formResults" style="display: none;" checked>
-                <label for="formResults" style="display: none;">Marking</label>
+                <div id="formResultsOptions" class="hidden">
+                    <span>Forms:</span>
+                    <input type="checkbox" id="formResults" name="formResults" checked> <!-- checked -->
+                    <label for="formResults">Marking</label>
+                </div>
             </details>
         </div>
         <div class="testResults"></div>
     </div>
 </body>
 
+<script type="text/javascript" src="../settings/settings.js"></script>
 <script type="text/javascript" src="panel.js"></script>
 
 </html>
