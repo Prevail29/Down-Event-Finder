@@ -2,26 +2,46 @@
     font-family: 'Arial';
 }
 
-details {
-    border: 1px solid grey;
-}
-
-summary {
-    padding: 0.2em;
-}
-
-details[open] summary {
-    border-bottom: 1px solid #aaa;
-}
-
-fieldset {
-    border: 1px solid grey;
-}
-
+/* Class for hiding certain elements */
 .hidden {
     display: none;
 }
 
+/* Details CSS for Options */
+details {
+    border: 1px solid grey;
+    border-radius: 4px;
+    padding: 0.5em 0.5em 0;
+}
+
+summary {
+    padding: 0.5em;
+    margin: -0.5em -0.5em 0;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+details[open] {
+    padding: 0.5em;
+}
+
+details[open] summary {
+    border: 1px solid grey;
+}
+
+details:not([open]):hover,
+details[open] summary:hover {
+    background-color: #CFCFCF;
+    cursor: pointer;
+}
+
+details hr {
+    margin-left: -0.5em;
+    margin-right: -0.5em;
+}
+
+/* CSS for options */
 .columns {
     columns: 3;
 }
@@ -33,7 +53,6 @@ fieldset {
 
 .colors div {
     columns: 2;
-    margin-left: 0.5em;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
 }
@@ -43,18 +62,40 @@ fieldset {
     margin-bottom: 0.5em;
 }
 
+/* CSS for Dialog */
+dialog p b {
+    color: #B30000;
+}
+
+dialog button {
+    padding: 0.2em;
+    border-radius: 5px;
+}
+
+#displayResultsOptions {
+    margin-top: 1em;
+}
+
+
+/* CSS for Buttons */
 button {
     color: black;
     background-color: #E8E8E8;
-    padding: 0.4em;
     cursor: pointer;
+    padding: 0.2em;
     border: 1px solid #A6A6A6;
+    border-radius: 5px;
 }
 
 button:hover {
     background-color: #CFCFCF;
 }
 
+#initiateButton {
+    padding: 0.4em;
+}
+
+/* CSS for results */
 #results ol li {
     color: black;
 }
@@ -64,4 +105,19 @@ button:hover {
     color: #00008B;
     background-color: #FBFFC2;
     cursor: pointer;
+}
+
+.heading {
+    margin-top: 1.5em;
+    display: flex;
+    align-items: center;
+}
+
+#results .heading h2 {
+    margin: 0;
+}
+
+#results .heading #iterateHighlightButton {
+    margin-left: auto;
+    padding: 0.4em;
 }

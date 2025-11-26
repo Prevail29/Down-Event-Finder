@@ -19,14 +19,14 @@ document.getElementById("formResults").addEventListener("click", (event) => disp
 // Functions for panel
 function showTestingSpeed() {
     let checkbox = document.getElementById("slow").checked
-    let testingSpeedField = document.querySelector("fieldset div")
+    let testingSpeedField = document.querySelector(".testBehavior div")
     if (checkbox) testingSpeedField.classList.remove("hidden")
     else testingSpeedField.classList.add("hidden")
 }
 
 // Function for checking / unchecking all filters at once 
 function checkAllFilter() {
-    let allFilter = document.querySelectorAll('div details.filter input:not([id*="checkAll"])')
+    let allFilter = document.querySelectorAll('.filter input:not([id*="checkAll"])')
     if (document.getElementById("checkAll").checked) {
         allFilter.forEach((checkbox) => checkbox.checked = true)
     } else {
@@ -141,8 +141,7 @@ function initiateTest(downEvents) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
-                document.getElementById("iterateHighlightButton").classList.remove("hidden")
-                document.getElementById("displayResultsOptions").classList.remove("hidden")
+                document.getElementById("results").classList.remove("hidden")
                 h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)

@@ -23,20 +23,43 @@ const checkboxSameCD = document.getElementById("sameCDFilter")
 const saveButton = document.getElementById("saveButton")
 saveButton.addEventListener("click", saveOptions)
 
-// Clear Button
-const clearButton = document.getElementById("clear")
-clearButton.addEventListener("click", clear)
+// Various Elements
+const dialog = document.querySelector("dialog");
+const optionStatus = document.getElementById("optionStatus")
 
-// Display all items in storage
-chrome.storage.sync.get(null, (items) => {
-    console.log(items);
-});
+// Open Dialog Button
+const resetDialogButton = document.getElementById("openResetDialog")
+resetDialogButton.addEventListener("click", openDialog)
 
-function clear() {
-    chrome.storage.sync.clear()
-    console.log("Cleared Storage!")
+// Confirm Reset Button
+const confirmReset = document.getElementById("confirmReset")
+confirmReset.addEventListener("click", clear)
+
+// Cancel Reset Button 
+const cancelReset = document.getElementById("cancelReset")
+cancelReset.addEventListener("click", closeDialog)
+
+// Open Dialog
+function openDialog() {
+    dialog.showModal()
 }
 
+// Close Dialog
+function closeDialog() {
+    dialog.close()
+}
+
+// Clear storage
+function clear() {
+    dialog.close()
+    chrome.storage.sync.clear()
+    optionStatus.textContent = "Options reverted."
+    setTimeout(() => {
+        optionStatus.textContent = '';
+    }, 3000);
+}
+
+// Save all options
 function saveOptions() {
     const slowCheckboxActive = checkboxSlow.checked
     const speedValue = speedInput.value
@@ -65,19 +88,24 @@ function saveOptions() {
             fHT: headTitleFilter, fCD: characterDataFilter
         },
         () => {
-            console.log("Options were saved!")
+            optionStatus.textContent = "Options saved."
+            setTimeout(() => {
+                optionStatus.textContent = '';
+            }, 3000);
         }
     )
 }
 
+// Change sV to a higher value later
+// Load options
 function restoreOptions() {
     chrome.storage.sync.get(
         {
             sCA: false, sV: 10, fCA: true,
             pPC: "#ff8400", sPC: "#0421c4", pWC: "#9400D3", sWC: "#F5F531",
-            fME: false, fS: true, fF: true, 
+            fME: false, fS: true, fF: true,
             fSA: true, fAE: true, fD: true,
-            fHT: true, fCD: true 
+            fHT: true, fCD: true
         },
         (items) => {
             checkboxSlow.checked = items.sCA
@@ -99,14 +127,22 @@ function restoreOptions() {
             checkboxSameCD.checked = items.fCD
 
             if (checkboxSlow.checked) document.querySelector("fieldset div").classList.remove("hidden")
-            console.log("Restored Options!")
         }
     )
 }
 
+// Display all items in storage
+/*
+chrome.storage.sync.get(null, (items) => {
+    console.log(items);
+});
+*/
+
 // Monitor how much space the storage takes up
+/*
 chrome.storage.sync.getBytesInUse(null, (bytes) => {
     console.log("Sync storage in bytes:", bytes);
 });
+*/
 
 document.addEventListener('DOMContentLoaded', restoreOptions)
