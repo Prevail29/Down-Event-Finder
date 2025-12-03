@@ -62,6 +62,11 @@ details hr {
     margin-bottom: 0.5em;
 }
 
+#optionStatus, 
+#displayStatus {
+    font-weight: bold;
+}
+
 /* CSS for Dialog */
 dialog p b {
     color: #B30000;
@@ -75,7 +80,6 @@ dialog button {
 #displayResultsOptions {
     margin-top: 1em;
 }
-
 
 /* CSS for Buttons */
 button {

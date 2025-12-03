@@ -11,8 +11,8 @@
     <h1>Down-Events Finder</h1>
     <details>
         <summary>Options</summary>
-        <div class="testBehavior">
-            <h3>Test Behavior</h3>
+        <div class="behavior">
+            <h3>behavior</h3>
             <input type="checkbox" id="slow" name="slow">
             <label for="slow">Slow test</label>
             <br>
@@ -33,26 +33,26 @@
                 <input type="checkbox" id="multipleDownEvents" name="multipleDownEvents">
                 <label for="multipleDownEvents">Different down events on the same element</label>
                 <h4 id="attributeHeading">Attribute Filter</h3>
-                <input type="checkbox" id="cssFilter" name="cssFilter" checked>
-                <label for="cssFilter">Styling</label>
-                <br>
-                <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
-                <label for="falsyFilter">Falsy values</label>
-                <br>
-                <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
-                <label for="sameAttributeFilter">Identical values</label>
-                <br>
-                <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
-                <label for="ariaExpandedFilter">Aria-expanded</label>
-                <br>
-                <input type="checkbox" id="dataFilter" name="dataFilter" checked>
-                <label for="dataFilter">Data</label>
-                <h4>ChildList Filter</h4>
-                <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
-                <label for="headTitleFilter">Targeting Head and Title</label>
-                <h4>CharacterData Filter</h4>
-                <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
-                <label for="sameCDFilter">Identical values</label>
+                    <input type="checkbox" id="cssFilter" name="cssFilter" checked>
+                    <label for="cssFilter">Styling</label>
+                    <br>
+                    <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
+                    <label for="falsyFilter">Falsy values</label>
+                    <br>
+                    <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
+                    <label for="sameAttributeFilter">Identical values</label>
+                    <br>
+                    <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
+                    <label for="ariaExpandedFilter">Aria-expanded</label>
+                    <br>
+                    <input type="checkbox" id="dataFilter" name="dataFilter" checked>
+                    <label for="dataFilter">Data</label>
+                    <h4>ChildList Filter</h4>
+                    <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
+                    <label for="headTitleFilter">Targeting Head and Title</label>
+                    <h4>CharacterData Filter</h4>
+                    <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
+                    <label for="sameCDFilter">Identical values</label>
             </div>
             <p>Filters allow for fine-tuning the observable results:</p>
             <ul>
@@ -84,16 +84,15 @@
         </div>
         <br>
         <p id="optionStatus"></p>
-        <button id="saveButton" class="optionButtons">Save Options</button>
-        <button id="openResetDialog" class="optionButtons">Restore Defaults</button>
+        <button id="optionSave" class="optionButtons">Save Options</button>
+        <button id="optionResetDialog" class="optionButtons">Restore Defaults</button>
     </details>
-    <dialog>
+    <dialog id="optionDialog">
         <p>
-            <b>Warning:</b> Would you like to reset all options?<br>
-            Changes after confirming are made after reloading the extension!
+            <b>Warning:</b> Do you want to reset your settings?<br>
         </p>
-        <button id="confirmReset">Confirm</button>
-        <button id="cancelReset">Cancel</button>
+        <button id="optionReset">Confirm</button>
+        <button id="optionCancel">Cancel</button>
     </dialog>
     <br>
     <div>
@@ -124,15 +123,25 @@
                 <input type="checkbox" id="touchstartResults" name="touchstartResults" checked>
                 <label for="touchstartResults">Touchstart</label>
                 <br>
-                <div id="formResultsOptions" class="hidden">
-                    <span>Forms:</span>
-                    <input type="checkbox" id="formResults" name="formResults" checked>
-                    <label for="formResults">Marking</label>
-                </div>
+                <span>Forms:</span>
+                <input type="checkbox" id="formResults" name="formResults" checked>
+                <label for="formResults">Marking</label>
+                <br>
+                <p id="displayStatus"></p>
+                <button id="displaySave" class="optionButtons">Save Display Options</button>
+                <button id="displayResetDialog" class="optionButtons">Restore Display Defaults</button>
             </details>
         </div>
         <div class="testResults"></div>
     </div>
+    <dialog id="displayDialog">
+        <p>
+            <b>Warning:</b> Do you want to reset your settings?<br>
+            Changes are made after reloading the extension!
+        </p>
+        <button id="displayReset">Confirm</button>
+        <button id="displayCancel">Cancel</button>
+    </dialog>
 </body>
 
 <script type="text/javascript" src="../options/options.js"></script>
