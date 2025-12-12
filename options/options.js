@@ -1,7 +1,8 @@
 // Behavior
 const checkboxSlow = document.getElementById("slow")
 const speedInput = document.getElementById("speed")
-const checkboxForm = document.getElementById("form")
+const highlightBackgroundColorInput = document.getElementById("highlightBackgroundColor")
+const highlightBorderColorInput = document.getElementById("highlightBorderColor")
 
 // Colors
 const primaryProblemColorInput = document.getElementById("primaryProblemColor")
@@ -74,7 +75,8 @@ chrome.storage.sync.getBytesInUse(null, (bytes) => {
 function saveOptions() {
     const slowTest = checkboxSlow.checked
     const speedValue = speedInput.value
-    const formCheckboxActive = checkboxForm.checked
+    const highlightBackgroundColor = highlightBackgroundColorInput.value
+    const highlightBorderColor = highlightBorderColorInput.value
 
     const primaryProblemColor = primaryProblemColorInput.value
     const secondaryProblemColor = secondaryProblemColorInput.value
@@ -92,7 +94,7 @@ function saveOptions() {
 
     chrome.storage.sync.set(
         {
-            sT: slowTest, sV: speedValue, fCA: formCheckboxActive,
+            sT: slowTest, sV: speedValue, hBa: highlightBackgroundColor, hBo: highlightBorderColor,
             pPC: primaryProblemColor, sPC: secondaryProblemColor, pWC: primaryWarningColor, sWC: secondaryWarningColor,
             fME: filterMultiple, fS: filterCSS, fF: filterFalsy,
             fSA: filterSameAttribute, fAE: filterAriaExpanded, fD: filterData,
@@ -109,7 +111,7 @@ function saveOptions() {
 
 // Clear options 
 function clearOptions() {
-    let optionKeys = ["sT", "sV", "fCA",
+    let optionKeys = ["sT", "sV", "hBa", "hBo",
         "pPC", "sPC", "pWC", "sWC",
         "fME", "fS", "fF", "fSA", "fAE", "fD", "fHT", "fCD"]
     let testingSpeedField = document.querySelector(".behavior div")
@@ -117,7 +119,8 @@ function clearOptions() {
     chrome.storage.sync.remove(optionKeys)
     checkboxSlow.checked = false
     speedInput.value = 10
-    checkboxForm.checked = true
+    highlightBackgroundColorInput.value = "#FDFF47"
+    highlightBorderColorInput.value = "#000000"
     primaryProblemColorInput.value = "#ff8400"
     secondaryProblemColorInput.value = "#0421c4"
     primaryWarningColorInput.value = "#9400D3"
@@ -130,7 +133,7 @@ function clearOptions() {
     checkboxData.checked = true
     checkboxHeadTitle.checked = true
     checkboxSameCD.checked = true
-    if (!testingSpeedField.classList.contains("hidden")) testingSpeedField.classList.add("hidden") 
+    if (!testingSpeedField.classList.contains("hidden")) testingSpeedField.classList.add("hidden")
     optionStatus.textContent = "Defaults restored."
     setTimeout(() => {
         optionStatus.textContent = ''
@@ -165,11 +168,22 @@ function saveDisplay() {
 // Clear display options
 function clearDisplay() {
     // ToDo: Check all checkboxes and take a look at display
-    displayDialog.close()
     let displayKeys = ["dPr", "dWa", "dUn",
-        "dMo", "dPo", "dTo",
-        "dF"]
+        "dMo", "dPo", "dTo", "dF"]
+    displayDialog.close()
     chrome.storage.sync.remove(displayKeys)
+    checkboxProblemDisplay.checked = true
+    checkboxWarningDisplay.checked = true
+    checkboxUnobservableDisplay.checked = true
+    checkboxMousedownDisplay.checked = true
+    checkboxPointerdownDisplay.checked = true
+    checkboxTouchstartDisplay.checked = true
+    checkboxFormDisplay.checked = true
+    
+    // Calls function from panel.js
+    displayResults()
+    displayFormMarkings()
+ 
     displayStatus.textContent = "Defaults restored."
     setTimeout(() => {
         displayStatus.textContent = ""
@@ -181,18 +195,19 @@ function restoreOptions() {
     // ToDo: Change sV to a higher value later (10 is too low, 500 or 1000)
     chrome.storage.sync.get(
         {
-            sT: false, sV: 10, fCA: true,
+            sT: false, sV: 10, hBa: "#FDFF47", hBo: "#000000",
             pPC: "#ff8400", sPC: "#0421c4", pWC: "#9400D3", sWC: "#F5F531",
             fME: false, fS: true, fF: true,
             fSA: true, fAE: true, fD: true,
             fHT: true, fCD: true,
             dPr: true, dWa: true, dUn: true,
-            dMo: true, dPo: true, dTo: true
+            dMo: true, dPo: true, dTo: true, dF: true
         },
         (items) => {
             checkboxSlow.checked = items.sT
             speedInput.value = items.sV
-            checkboxForm.checked = items.fCA
+            highlightBackgroundColorInput.value = items.hBa
+            highlightBorderColorInput.value = items.hBo
 
             primaryProblemColorInput.value = items.pPC
             secondaryProblemColorInput.value = items.sPC
@@ -214,6 +229,7 @@ function restoreOptions() {
             checkboxMousedownDisplay.checked = items.dMo
             checkboxPointerdownDisplay.checked = items.dPo
             checkboxTouchstartDisplay.checked = items.dTo
+            checkboxFormDisplay.checked = items.dF
 
             if (checkboxSlow.checked) document.querySelector(".behavior div").classList.remove("hidden")
         }

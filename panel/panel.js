@@ -24,17 +24,12 @@ function getColors() {
     return [colorWarningP, colorWarningS, colorProblemP, colorProblemS]
 }
 
-function getInputSpeed() {
+function getSlowValues() {
     let speed = document.getElementById("speed").value
-    return speed
-}
-
-function getCheckboxValues() {
-    let checkboxes = {
-        forms: document.getElementById("form").checked,
-        slow: document.getElementById("slow").checked,
-    }
-    return checkboxes
+    let checkbox = document.getElementById("slow").checked
+    let highlightBackgroundColor = document.getElementById("highlightBackgroundColor").value
+    let highlightBorderColor = document.getElementById("highlightBorderColor").value
+    return [checkbox, speed, highlightBackgroundColor, highlightBorderColor]
 }
 
 function getFilter() {
@@ -104,7 +99,8 @@ function getDownEventElements() {
             if (error) {
                 console.error("Error:", error)
             } else {
-                // console.log("Results:", result)
+                // let resultTemp = [result[0]]
+                // console.log("Results:", result2)
                 initiateTest(result)
                 testRan = true
             }
@@ -120,7 +116,7 @@ function initiateTest(downEvents) {
     }, () => {
         chrome.scripting.executeScript({
             target: { tabId: chrome.devtools.inspectedWindow.tabId },
-            args: [getCheckboxValues(), getFilter(), getInputSpeed(), getColors(), downEvents],
+            args: [getFilter(), getSlowValues(), getColors(), downEvents],
             func: (...args) => testWebsite(...args)
         }).then((results) => {
             const elementsWithDownEventsLength = downEvents.length
@@ -132,19 +128,19 @@ function initiateTest(downEvents) {
             const problemDownEvents = results[0].result.problemDownEvents
             const totalDownEvents = unobservableDownEvents.length + warningDownEvents.length + problemDownEvents.length
             allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
-            /*
-            console.log("Unobservable Down-Events: ", unobservableDownEvents)
-            console.log("Warning Down-Events: ", warningDownEvents)
-            console.log("Problem Down-Events: ", problemDownEvents)
-            */
+
+            // console.log("Unobservable Down-Events: ", unobservableDownEvents)
+            // console.log("Warning Down-Events: ", warningDownEvents)
+            // console.log("Problem Down-Events: ", problemDownEvents)
+
             let resultNode = document.getElementsByClassName("testResults")[0]
             let h3 = document.createElement("h3")
+            document.getElementById("results").classList.remove("hidden")
 
             if (elementsWithDownEventsLength === 0 || elementsWithDownEventsLength == undefined) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
             } else {
-                document.getElementById("results").classList.remove("hidden")
                 h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
                 resultNode.appendChild(h3)
@@ -259,7 +255,24 @@ function initiateTest(downEvents) {
                 divProblem.appendChild(listProblem)
 
                 resultNode.append(divUnobservable, divWarning, divProblem)
+
+                if (problemDownEvents.length > 0) createProblemBoxes(problemDownEvents)
+                displayResults()
+                if (formsChanged) displayFormMarkings()
             }
+        })
+    })
+}
+
+function createProblemBoxes(problemDownEvents) {
+    chrome.scripting.executeScript({
+        target: { tabId: chrome.devtools.inspectedWindow.tabId },
+        files: ["./scripts/create_boxes.js"]
+    }, () => {
+        chrome.scripting.executeScript({
+            target: { tabId: chrome.devtools.inspectedWindow.tabId },
+            args: [problemDownEvents],
+            func: (...args) => createProblemBoxes(...args)
         })
     })
 }
@@ -346,11 +359,11 @@ function displayFormMarkings() {
             changedFormsList.classList.add("hidden")
         }
     }
-
 }
 
 // Iteratively highlight elements
 function iterativelyHighlightElements() {
+     const [slowCheckbox, speed, highlightBackgroundColor, highlightBorderColor] = getSlowValues()
     chrome.devtools.inspectedWindow.eval(`(function(){
             let i = 0
             let styleAttributes = []
@@ -378,8 +391,8 @@ function iterativelyHighlightElements() {
                 }
                 if (i < downEvents.length){
                     let element = downEvents[i]
-                    element.style.outline = "4px solid purple"
-                    element.style.backgroundColor = "#FDFF47"
+                    element.style.backgroundColor = "${highlightBackgroundColor}"
+                    element.style.outline = "4px solid ${highlightBorderColor}"
                     element.style.transform = "scale(1.2)"
                     element.scrollIntoView({block: "center", inline: "center"})
                     i++

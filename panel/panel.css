@@ -42,6 +42,10 @@ details hr {
 }
 
 /* CSS for options */
+.behavior div label{
+    margin-left: 0.5em;
+}
+
 .columns {
     columns: 3;
 }
@@ -58,11 +62,16 @@ details hr {
 }
 
 #primaryProblemColor,
-#primaryWarningColor {
+#secondaryProblemColor {
     margin-bottom: 0.5em;
 }
 
-#optionStatus, 
+#primaryWarningColor,
+#secondaryWarningColor {
+    margin-bottom: 1em;
+}
+
+#optionStatus,
 #displayStatus {
     font-weight: bold;
 }
@@ -117,11 +126,7 @@ button:hover {
     align-items: center;
 }
 
-#results .heading h2 {
+.heading h2 {
     margin: 0;
-}
-
-#results .heading #iterateHighlightButton {
-    margin-left: auto;
-    padding: 0.4em;
+    margin-right: 0.5em;
 }
