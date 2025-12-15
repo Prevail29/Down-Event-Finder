@@ -1,6 +1,5 @@
 function createProblemBoxes(problemDownEvents) {
     let problemMessages = []
-    // console.log("It's working:", problemDownEvents)
     problemDownEvents.forEach(obj => {
         const element = document.querySelector(`[data-downeventsfinder-id='${obj.dataId}']`)
         const eventListener = obj.eventListener
@@ -63,7 +62,6 @@ function createBox(element, eventListener) {
     if (element) element.after(shadowContainerBox)
     const shadowBox = shadowContainerBox.attachShadow({ mode: "open" })
     shadowBox.appendChild(divBox)
-    console.log(element.parentNode)
 }
 
 // Create additional information text 

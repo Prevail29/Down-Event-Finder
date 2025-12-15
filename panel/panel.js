@@ -1,4 +1,5 @@
-let allDownEvents = undefined
+let allDownEvents = undefined // Variable for all Down-Events
+let testRan = false // Boolean if test already ran once on website
 
 // Add event listeners to buttons
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
@@ -15,23 +16,42 @@ document.getElementById("touchstartResults").addEventListener("click", displayRe
 
 document.getElementById("formResults").addEventListener("click", displayFormMarkings)
 
-// Get values from panel
+// Show the testing speed for slow speed
+function showTestingSpeed() {
+    let checkbox = document.getElementById("slow").checked
+    let testingSpeedField = document.querySelector(".behavior div")
+    setVisibility(testingSpeedField, checkbox)
+}
+
+// Function for checking / unchecking all filters at once 
+function checkAllFilter() {
+    let allFilter = document.querySelectorAll('.filter input:not([id*="checkAll"])')
+    if (document.getElementById("checkAll").checked) {
+        allFilter.forEach((checkbox) => checkbox.checked = true)
+    } else {
+        allFilter.forEach((checkbox) => checkbox.checked = false)
+    }
+}
+
+// Get color values from panel
 function getColors() {
     let colorWarningP = document.getElementById("primaryWarningColor").value
     let colorWarningS = document.getElementById("secondaryWarningColor").value
     let colorProblemP = document.getElementById("primaryProblemColor").value
     let colorProblemS = document.getElementById("secondaryProblemColor").value
-    return [colorWarningP, colorWarningS, colorProblemP, colorProblemS]
+    let highlightBackgroundColor = document.getElementById("highlightBackgroundColor").value
+    let highlightBorderColor = document.getElementById("highlightBorderColor").value
+    return [colorWarningP, colorWarningS, colorProblemP, colorProblemS, highlightBackgroundColor, highlightBorderColor]
 }
 
+// Get slow test values from panel
 function getSlowValues() {
     let speed = document.getElementById("speed").value
     let checkbox = document.getElementById("slow").checked
-    let highlightBackgroundColor = document.getElementById("highlightBackgroundColor").value
-    let highlightBorderColor = document.getElementById("highlightBorderColor").value
-    return [checkbox, speed, highlightBackgroundColor, highlightBorderColor]
+    return [checkbox, speed]
 }
 
+// Get filter values from panel
 function getFilter() {
     let filters = {
         multipleDownEvents: document.getElementById("multipleDownEvents").checked,
@@ -52,30 +72,9 @@ function setVisibility(element, condition) {
     else element.classList.add("hidden")
 }
 
-// Show the testing speed for slow speed
-function showTestingSpeed() {
-    let checkbox = document.getElementById("slow").checked
-    let testingSpeedField = document.querySelector(".behavior div")
-    setVisibility(testingSpeedField, checkbox)
-}
-
-// Function for checking / unchecking all filters at once 
-function checkAllFilter() {
-    let allFilter = document.querySelectorAll('.filter input:not([id*="checkAll"])')
-    if (document.getElementById("checkAll").checked) {
-        allFilter.forEach((checkbox) => checkbox.checked = true)
-    } else {
-        allFilter.forEach((checkbox) => checkbox.checked = false)
-    }
-}
-
-// Boolean if test has already been run once on website
-let testRan = false
-
 // Retrieve all down-events from website
 function getDownEventElements() {
-    if (testRan) console.log("Test already ran!")
-    else {
+    if (!testRan) {
         chrome.devtools.inspectedWindow.eval(`(function(){
             let id = 1
             let downEvents = []
@@ -99,10 +98,8 @@ function getDownEventElements() {
             if (error) {
                 console.error("Error:", error)
             } else {
-                // let resultTemp = [result[0]]
-                // console.log("Results:", result2)
-                initiateTest(result)
                 testRan = true
+                initiateTest(result)
             }
         })
     }
@@ -321,49 +318,33 @@ function displayResults() {
 
 // Change the visibility of form markings
 function displayFormMarkings() {
-    const checkboxFormResults = document.getElementById("formResults")
+    const checkboxFormResults = document.getElementById("formResults").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = getColors()
     let changedFormsList = document.getElementById("changedFormsList")
-    if (changedFormsList) {
-        if (checkboxFormResults.checked) {
-            chrome.devtools.inspectedWindow.eval(`(function(){
-                let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
-                const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
-                targetFormElements.forEach((element) => {
-                    element.setAttribute("style", "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;")
-                })
-                if(fileInputs){
-                    fileInputs.forEach((input) => {
-                        input.setAttribute("style", "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;")    
-                    })
-                }
-            })()`, (result, error) => {
-                if (error) console.error("Error:", error)
+    chrome.devtools.inspectedWindow.eval(`(function(){
+        const styleAttributeProblem = "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;"
+        const styleAttributeWarning = "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;"
+        let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+        const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
+        targetFormElements.forEach((element) => {
+            if (${checkboxFormResults}) element.setAttribute("style", styleAttributeProblem)
+            else element.setAttribute("style", "")
+        })
+        if(fileInputs){
+            fileInputs.forEach((input) => {
+                if (${checkboxFormResults}) input.setAttribute("style", styleAttributeWarning)
+                else input.setAttribute("style", "")
             })
-            changedFormsList.classList.remove("hidden")
-        } else {
-            chrome.devtools.inspectedWindow.eval(`(function(){
-                let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
-                const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
-                targetFormElements.forEach((element) => {
-                    element.setAttribute("style", "")
-                })
-                if(fileInputs){
-                    fileInputs.forEach((input) => {
-                        input.setAttribute("style", "")    
-                    })
-                }
-            })()`, (result, error) => {
-                if (error) console.error("Error:", error)
-            })
-            changedFormsList.classList.add("hidden")
         }
-    }
+        })()`, (result, error) => {
+        if (error) console.error("Error:", error)
+    })
+    setVisibility(changedFormsList, checkboxFormResults)
 }
 
 // Iteratively highlight elements
 function iterativelyHighlightElements() {
-     const [slowCheckbox, speed, highlightBackgroundColor, highlightBorderColor] = getSlowValues()
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = getColors()
     chrome.devtools.inspectedWindow.eval(`(function(){
             let i = 0
             let styleAttributes = []
@@ -376,7 +357,6 @@ function iterativelyHighlightElements() {
             }
             let elementOutline, elementBackground = undefined
             downEvents.forEach((obj) => {
-                console.log(obj.style.cssText)
                 styleAttributes.push(obj.style.cssText)
                 obj.setAttribute("style", "")
             })

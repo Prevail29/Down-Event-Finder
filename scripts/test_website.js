@@ -1,22 +1,45 @@
-// ToDo: Make function slimmer and try to increase readibility
-async function testWebsite(filter, slowValues, colors, downEvents) {
-    // Get important elements of the current website
-    const State = Object.freeze({
-        UNOBSERVABLE: "unobservable",
-        WARNING: "warning",
-        PROBLEM: "problem"
-    })
-    const formElements = document.body.querySelectorAll(`textarea, input`)
-    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
-    const [slowCheckbox, speed, highlightBackgroundColor, highlightBorderColor] = slowValues
-    let results = {
-        formsChanged: false,
-        changedFormElements: [],
-        unobservableDownEvents: [],
-        warningDownEvents: [],
-        problemDownEvents: []
-    }
+// Get the textarea and input elements of a website
+const formElements = document.body.querySelectorAll(`textarea, input`)
 
+// Create states
+const State = Object.freeze({
+    UNOBSERVABLE: "unobservable",
+    WARNING: "warning",
+    PROBLEM: "problem"
+})
+
+// Create results
+let results = {
+    formsChanged: false,
+    changedFormElements: [],
+    unobservableDownEvents: [],
+    warningDownEvents: [],
+    problemDownEvents: []
+}
+
+// Create important Events
+const mousedown = new MouseEvent("mousedown", {
+    view: window,
+    bubbles: true,
+    cancelable: true
+})
+
+const touchstart = new TouchEvent("touchstart", {
+    view: window,
+    bubbles: true,
+    cancelable: true
+})
+
+const pointerdown = new PointerEvent("pointerdown", {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+})
+
+async function testWebsite(filter, slowValues, colors, downEvents) {
+    // Get important elements of the current website  
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = colors
+    const [slowCheckbox, speed] = slowValues
     if (downEvents.length === 0) return results
 
     // Create mutation observer
@@ -30,29 +53,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         subtree: true
     }
     const observer = new MutationObserver(callback)
-
-    // Create important Events
-    const mousedown = new MouseEvent("mousedown", {
-        view: window,
-        bubbles: true,
-        cancelable: true
-    })
-
-    const touchstart = new TouchEvent("touchstart", {
-        view: window,
-        bubbles: true,
-        cancelable: true
-    })
-
-    const pointerdown = new PointerEvent("pointerdown", {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-    })
-
+    
     // Callback function for the mutation observer and storing messages
-    // ToDo?: Separate function
-
     function callback(mutations, eventType, eventListeners) {
         let message = undefined
         if (mutations.length === 0) return [State.UNOBSERVABLE, message]
@@ -215,7 +217,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         // Slow test
         let i = 0
         let firstElement = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
-        firstElement.setAttribute("style", `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
+        firstElement.setAttribute("style", 
+            `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
         await new Promise(resolve => setTimeout(function loopThroughElements() {
             let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
             let elementTagName = element.tagName
@@ -223,7 +226,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
             if (i + 1 < downEvents.length) {
                 document.querySelector(`[data-downeventsfinder-id=${downEvents[i + 1].elementId}]`)
-                    .setAttribute("style", `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
+                    .setAttribute("style", 
+                        `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
             }
             element.scrollIntoView({ block: "center", inline: "center" })
             eventListeners.forEach(event => {
@@ -327,7 +331,6 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         })
     }
 
-
     // Iterate through all Down-Events and check whether the element can be found
     let allDownEvents = results.unobservableDownEvents.concat(results.warningDownEvents, results.problemDownEvents)
     for (let i = 0; i < allDownEvents.length; i++) {
@@ -347,8 +350,6 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
 
     // Check whether form values have changed
     let secondValues = Array.from(formElements).map((input) => input.value)
-    //console.log("First values:", firstValues)
-    //console.log("Second values:", secondValues)
     if (firstValues.length == secondValues.length) {
         for (let k = 0; k < formElements.length; k++) {
             if (firstValues[k] != secondValues[k]) {
@@ -360,7 +361,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         }
     } else results.formsChanged = true
 
-    // Close dialogs 
+    // Close dialogs
     if (htmlDialog.length > 0) htmlDialog.forEach((dialog) => dialog.close())
     return results
 }

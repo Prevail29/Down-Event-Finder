@@ -52,12 +52,10 @@
                     <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
                     <label for="sameCDFilter">Identical values</label>
             </div>
-            <p>Filters allow for fine-tuning the observable results:</p>
+            <p>Filters allow for fine-tuning the observable results by determining whether a mutation will receive the state "warning" or "problem":</p>
             <ul>
-                <li>If a filter is checked, the selected option will <b>not</b> be observed.</li>
-                <li>If a filter is unchecked, the selected option will be observed and will appear in the results
-                    area.
-                </li>
+                <li>If a filter is checked, mutations will receive the state "warning".</li>
+                <li>If a filter is unchecked, mutations will receive the state "problem".</li>
             </ul>
             <p>Changes to the filters need to be applied <b>before</b> the test is run!<br>
                 The default options are recommended, and changes should only be made in very specific circumstances.

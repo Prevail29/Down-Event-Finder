@@ -1,16 +1,11 @@
 function displayResults(colors, downEvents, checkboxes) {
-    // console.log("Problem Info Boxes:", document.querySelectorAll(".problemInfoBox"))
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     const [checkboxProblem, checkboxWarning, checkboxUnobservable,
         checkboxMousedown, checkboxPointerdown, checkboxTouchstart] = checkboxes
     for (const [key, value] of Object.entries(downEvents)) {
         const element = document.querySelector(`[data-downEventsFinder-id=${key}]`)
-        // console.log("Value:", value)
-        // console.log("Key:", key)
-        // console.log("Element:", element)
         const warningStyleAttribute = `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important;`
         const problemStyleAttrbiute = `border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;`
-
         if (element) {
             // Simple Case: Element only has a single down-event
             if (value.length === 1) {
@@ -41,7 +36,6 @@ function displayResults(colors, downEvents, checkboxes) {
                 }
                 if (displayDownEvent && displayState) {
                     if (state === "problem") {
-                        // console.log("Element Next Sibling:", element.nextElementSibling)
                         element.setAttribute("style", problemStyleAttrbiute)
                         element.nextElementSibling.style.display = "inline"
                     } else element.setAttribute("style", warningStyleAttribute)
