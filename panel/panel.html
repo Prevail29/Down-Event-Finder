@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Down-Events Finder</title>
     <link rel="stylesheet" href="panel.css">
 </head>
@@ -30,34 +30,35 @@
                 <h4>General</h4>
                 <input type="checkbox" id="multipleDownEvents" name="multipleDownEvents">
                 <label for="multipleDownEvents">Different down events on the same element</label>
-                <h4 id="attributeHeading">Attribute Filter</h3>
-                    <input type="checkbox" id="cssFilter" name="cssFilter" checked>
-                    <label for="cssFilter">Styling</label>
-                    <br>
-                    <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
-                    <label for="falsyFilter">Falsy values</label>
-                    <br>
-                    <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
-                    <label for="sameAttributeFilter">Identical values</label>
-                    <br>
-                    <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
-                    <label for="ariaExpandedFilter">Aria-expanded</label>
-                    <br>
-                    <input type="checkbox" id="dataFilter" name="dataFilter" checked>
-                    <label for="dataFilter">Data</label>
-                    <h4>ChildList Filter</h4>
-                    <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
-                    <label for="headTitleFilter">Targeting Head and Title</label>
-                    <h4>CharacterData Filter</h4>
-                    <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
-                    <label for="sameCDFilter">Identical values</label>
+                <h4 id="attributeHeading">Attribute Filter</h4>
+                <input type="checkbox" id="cssFilter" name="cssFilter" checked>
+                <label for="cssFilter">Styling</label>
+                <br>
+                <input type="checkbox" id="falsyFilter" name="falsyFilter" checked>
+                <label for="falsyFilter">Falsy values</label>
+                <br>
+                <input type="checkbox" id="sameAttributeFilter" name="sameAttributeFilter" checked>
+                <label for="sameAttributeFilter">Identical values</label>
+                <br>
+                <input type="checkbox" id="ariaExpandedFilter" name="ariaExpandedFilter" checked>
+                <label for="ariaExpandedFilter">Aria-expanded</label>
+                <br>
+                <input type="checkbox" id="dataFilter" name="dataFilter" checked>
+                <label for="dataFilter">Data</label>
+                <h4>ChildList Filter</h4>
+                <input type="checkbox" id="headTitleFilter" name="headTitleFilter" checked>
+                <label for="headTitleFilter">Targeting Head and Title</label>
+                <h4>CharacterData Filter</h4>
+                <input type="checkbox" id="sameCDFilter" name="sameCDFilter" checked>
+                <label for="sameCDFilter">Identical values</label>
             </div>
-            <p>Filters allow for fine-tuning the observable results by determining whether a mutation will receive the state "warning" or "problem":</p>
+            <p>Filters allow for fine-tuning the observable results by determining whether a mutation will receive the
+                state "warning" or "problem":</p>
             <ul>
                 <li>If a filter is checked, mutations will receive the state "warning".</li>
                 <li>If a filter is unchecked, mutations will receive the state "problem".</li>
             </ul>
-            <p>Changes to the filters need to be applied <b>before</b> the test is run!<br>
+            <p>Changes to the filters need to be applied <strong>before</strong> the test is run!<br>
                 The default options are recommended, and changes should only be made in very specific circumstances.
             </p>
         </div>
@@ -71,8 +72,8 @@
                 <input type="color" id="primaryWarningColor" name="primaryWarningColor">
                 <label for="primaryWarningColor">Primary Warning Color</label>
                 <br>
-                <input type="color" id="highlightBackgroundColor" name="highlightBackground">
-                <label for="highlightBackground">Highlight Background Color</label>
+                <input type="color" id="highlightBackgroundColor" name="highlightBackgroundColor">
+                <label for="highlightBackgroundColor">Highlight Background Color</label>
                 <br>
                 <input type="color" id="secondaryProblemColor" name="secondaryProblemColor">
                 <label for="secondaryProblemColor">Secondary Problem Color</label>
@@ -85,13 +86,13 @@
             </div>
         </div>
         <br>
-        <p id="optionStatus"></p>
+        <p id="optionStatus" role="status" aria-atomic="true"></p>
         <button id="optionSave" class="optionButtons">Save Options</button>
         <button id="optionResetDialog" class="optionButtons">Restore Defaults</button>
     </details>
     <dialog id="optionDialog">
         <p>
-            <b>Warning:</b> Do you want to reset your settings?<br>
+            <strong>Warning:</strong> Do you want to reset your settings?<br>
         </p>
         <button id="optionReset">Confirm</button>
         <button id="optionCancel">Cancel</button>
@@ -129,7 +130,7 @@
                 <input type="checkbox" id="formResults" name="formResults" checked>
                 <label for="formResults">Marking</label>
                 <br>
-                <p id="displayStatus"></p>
+                <p id="displayStatus" role="status" aria-atomic="true"></p>
                 <button id="displaySave" class="optionButtons">Save Display Options</button>
                 <button id="displayResetDialog" class="optionButtons">Restore Display Defaults</button>
             </details>
@@ -138,15 +139,15 @@
     </div>
     <dialog id="displayDialog">
         <p>
-            <b>Warning:</b> Do you want to reset your settings?<br>
+            <strong>Warning:</strong> Do you want to reset your settings?<br>
             Changes are made after reloading the extension!
         </p>
         <button id="displayReset">Confirm</button>
         <button id="displayCancel">Cancel</button>
     </dialog>
-</body>
 
-<script type="text/javascript" src="../options/options.js"></script>
-<script type="text/javascript" src="panel.js"></script>
+    <script src="../options/options.js"></script>
+    <script src="panel.js"></script>
+</body>
 
 </html>

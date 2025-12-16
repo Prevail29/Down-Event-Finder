@@ -22,7 +22,7 @@ function createBox(element, eventListener) {
     symbol.style.fontSize = "small"
 
     let pEvent = document.createElement("span")
-    pEvent.textContent = `Observed ${eventListener} event`
+    pEvent.textContent = `Problem: ${eventListener} event observed`
     pEvent.style.color = "black"
     pEvent.style.fontFamily = "Arial"
     pEvent.style.fontSize = "small"

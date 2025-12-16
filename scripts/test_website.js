@@ -326,6 +326,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                         results.problemDownEvents.push(completeElement)
                         break;
                 }
+                if (!element.hasAttribute("aria-label")) element.setAttribute("aria-label", `Down-Event Finder: ${state} Down-Event.`)
             })
         })
     }
