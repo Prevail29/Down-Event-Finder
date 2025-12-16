@@ -127,7 +127,6 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                     `Old Value: ${oldValue.trim()}`, `New Value: ${newValue.trim()}`]
                 break;
         }
-        // console.log("Observed change!\nChange: ", mutations[0], "\nElement number: ", num, "\nTriggered by: ", eventType, "\nMutation Type: ", mutations[0].type)
         return [State.PROBLEM, message]
     }
 

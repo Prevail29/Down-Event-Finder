@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Down-Events Finder",
-  "version": "0.1",
+  "version": "1.0",
   "description": "An extension finding down-events on any website",
   "devtools_page": "devtools/devtools.html",
   "icons": {

@@ -1,7 +1,7 @@
 let allDownEvents = undefined // Variable for all Down-Events
 let testRan = false // Boolean if test already ran once on website
 
-// Add event listeners to buttons
+// Add event listeners to buttons and checkboxes
 document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
 document.getElementById("iterateHighlightButton").addEventListener("click", iterativelyHighlightElements)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
@@ -125,10 +125,6 @@ function initiateTest(downEvents) {
             const problemDownEvents = results[0].result.problemDownEvents
             const totalDownEvents = unobservableDownEvents.length + warningDownEvents.length + problemDownEvents.length
             allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
-
-            // console.log("Unobservable Down-Events: ", unobservableDownEvents)
-            // console.log("Warning Down-Events: ", warningDownEvents)
-            // console.log("Problem Down-Events: ", problemDownEvents)
 
             let resultNode = document.getElementsByClassName("testResults")[0]
             let h3 = document.createElement("h3")
@@ -321,25 +317,27 @@ function displayFormMarkings() {
     const checkboxFormResults = document.getElementById("formResults").checked
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = getColors()
     let changedFormsList = document.getElementById("changedFormsList")
-    chrome.devtools.inspectedWindow.eval(`(function(){
-        const styleAttributeProblem = "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;"
-        const styleAttributeWarning = "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;"
-        let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
-        const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
-        targetFormElements.forEach((element) => {
-            if (${checkboxFormResults}) element.setAttribute("style", styleAttributeProblem)
-            else element.setAttribute("style", "")
-        })
-        if(fileInputs){
-            fileInputs.forEach((input) => {
-                if (${checkboxFormResults}) input.setAttribute("style", styleAttributeWarning)
-                else input.setAttribute("style", "")
+    if (changedFormsList) {
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            const styleAttributeProblem = "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;"
+            const styleAttributeWarning = "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;"
+            let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+            const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
+            targetFormElements.forEach((element) => {
+                if (${checkboxFormResults}) element.setAttribute("style", styleAttributeProblem)
+                else element.setAttribute("style", "")
             })
-        }
-        })()`, (result, error) => {
-        if (error) console.error("Error:", error)
-    })
-    setVisibility(changedFormsList, checkboxFormResults)
+            if(fileInputs){
+                fileInputs.forEach((input) => {
+                    if (${checkboxFormResults}) input.setAttribute("style", styleAttributeWarning)
+                    else input.setAttribute("style", "")
+                })
+            }
+            })()`, (result, error) => {
+            if (error) console.error("Error:", error)
+        })
+        setVisibility(changedFormsList, checkboxFormResults)
+    }
 }
 
 // Iteratively highlight elements
