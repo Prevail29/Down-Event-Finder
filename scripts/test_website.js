@@ -1,5 +1,6 @@
-// Get the textarea and input elements of a website
+// Get certain elements from the website
 const formElements = document.body.querySelectorAll(`textarea, input`)
+const htmlDialog = document.querySelectorAll("dialog")
 
 // Create states
 const State = Object.freeze({
@@ -36,25 +37,26 @@ const pointerdown = new PointerEvent("pointerdown", {
     cancelable: true,
 })
 
+// Create variables for the MutationObserver
+const target = document
+const config = {
+    attributes: true,
+    attributeOldValue: true,
+    childList: true,
+    characterData: true,
+    characterDataOldValue: true,
+    subtree: true
+}
+
 async function testWebsite(filter, slowValues, colors, downEvents) {
     // Get important elements of the current website  
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = colors
     const [slowCheckbox, speed] = slowValues
     if (downEvents.length === 0) return results
 
-    // Create mutation observer
-    const target = document
-    const config = {
-        attributes: true,
-        attributeOldValue: true,
-        childList: true,
-        characterData: true,
-        characterDataOldValue: true,
-        subtree: true
-    }
     const observer = new MutationObserver(callback)
-    
-    // Callback function for the mutation observer and storing messages
+
+    // Callback function for the MutationObserver
     function callback(mutations, eventType, eventListeners) {
         let message = undefined
         if (mutations.length === 0) return [State.UNOBSERVABLE, message]
@@ -130,93 +132,15 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         return [State.PROBLEM, message]
     }
 
-    // Form element test
-    let firstValues = []
-    for (let k = 0; k < formElements.length; k++) {
-        switch (formElements[k].type) {
-            case "password":
-            case "search":
-            case "tel":
-            case "url":
-            case "textarea":
-            case "text":
-                let tempText = "test" + k
-                formElements[k].value = tempText
-                firstValues.push(tempText)
-                break;
-            case "range":
-            case "number":
-                let tempNum = "1"
-                formElements[k].value = tempNum
-                firstValues.push(tempNum)
-                break;
-            case "date":
-                let tempDate = "2000-01-01"
-                formElements[k].value = tempDate
-                firstValues.push(tempDate)
-                break;
-            case "datetime-local":
-                let tempDateLocal = "2000-01-01T20:00"
-                formElements[k].value = tempDateLocal
-                firstValues.push(tempDateLocal)
-                break;
-            case "time":
-                let tempTime = "00:00"
-                formElements[k].value = tempTime
-                firstValues.push(tempTime)
-                break;
-            case "week":
-                let tempWeek = "2000-W01"
-                formElements[k].value = tempWeek
-                firstValues.push(tempWeek)
-                break;
-            case "month":
-                let tempMonth = "2000-01"
-                formElements[k].value = tempMonth
-                firstValues.push(tempMonth)
-                break;
-            case "email":
-                let tempMail = "example@example.com"
-                formElements[k].value = tempMail
-                firstValues.push(tempMail)
-                break;
-            case "color":
-                let tempColor = "#ffffff"
-                formElements[k].value = tempColor
-                firstValues.push(tempColor)
-                break;
-            case "button":
-            case "submit":
-            case "reset":
-            case "radio":
-            case "checkbox":
-            case "hidden":
-            case "file":
-            case "image":
-                let value = formElements[k].value
-                firstValues.push(value)
-        }
-    }
-
-    // Check whether dialog exists and if yes, open all of them
-    let htmlDialog = document.querySelectorAll("dialog")
-    if (htmlDialog.length > 0) {
-        htmlDialog.forEach((dialog) => {
-            try {
-                dialog.close()
-                dialog.showModal()
-            } catch (error) {
-                console.error("Error opening the dialog: ", error)
-            }
-        })
-    }
+    let firstValues = inputFormValues()
+    interactWithDialog(true)
 
     // Testing the elements for down events
     if (slowCheckbox) {
         // Slow test
         let i = 0
         let firstElement = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
-        firstElement.setAttribute("style", 
+        firstElement.setAttribute("style",
             `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
         await new Promise(resolve => setTimeout(function loopThroughElements() {
             let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
@@ -225,7 +149,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
             if (i + 1 < downEvents.length) {
                 document.querySelector(`[data-downeventsfinder-id=${downEvents[i + 1].elementId}]`)
-                    .setAttribute("style", 
+                    .setAttribute("style",
                         `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
             }
             element.scrollIntoView({ block: "center", inline: "center" })
@@ -274,6 +198,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                         results.problemDownEvents.push(completeElement)
                         break;
                 }
+                if (!element.hasAttribute("aria-label")) element.setAttribute("aria-label", `Down-Event Finder: ${state} Down-Event.`)
             })
             i++
             if (i < downEvents.length) setTimeout(loopThroughElements, speed)
@@ -360,8 +285,89 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             }
         }
     } else results.formsChanged = true
+    
+    interactWithDialog(false)
 
-    // Close dialogs
-    if (htmlDialog.length > 0) htmlDialog.forEach((dialog) => dialog.close())
     return results
+}
+
+// Input temporary values into all input and textarea elements 
+function inputFormValues() {
+    let formValues = []
+    for (let k = 0; k < formElements.length; k++) {
+        switch (formElements[k].type) {
+            case "password":
+            case "search":
+            case "tel":
+            case "url":
+            case "textarea":
+            case "text":
+                let tempText = "test" + k
+                formElements[k].value = tempText
+                formValues.push(tempText)
+                break;
+            case "range":
+            case "number":
+                let tempNum = "1"
+                formElements[k].value = tempNum
+                formValues.push(tempNum)
+                break;
+            case "date":
+                let tempDate = "2000-01-01"
+                formElements[k].value = tempDate
+                formValues.push(tempDate)
+                break;
+            case "datetime-local":
+                let tempDateLocal = "2000-01-01T20:00"
+                formElements[k].value = tempDateLocal
+                formValues.push(tempDateLocal)
+                break;
+            case "time":
+                let tempTime = "00:00"
+                formElements[k].value = tempTime
+                formValues.push(tempTime)
+                break;
+            case "week":
+                let tempWeek = "2000-W01"
+                formElements[k].value = tempWeek
+                formValues.push(tempWeek)
+                break;
+            case "month":
+                let tempMonth = "2000-01"
+                formElements[k].value = tempMonth
+                formValues.push(tempMonth)
+                break;
+            case "email":
+                let tempMail = "example@example.com"
+                formElements[k].value = tempMail
+                formValues.push(tempMail)
+                break;
+            case "color":
+                let tempColor = "#ffffff"
+                formElements[k].value = tempColor
+                formValues.push(tempColor)
+                break;
+            case "button":
+            case "submit":
+            case "reset":
+            case "radio":
+            case "checkbox":
+            case "hidden":
+            case "file":
+            case "image":
+                let value = formElements[k].value
+                formValues.push(value)
+        }
+    }
+    return formValues
+}
+
+// Check whether dialog exists and open or close all of them
+function interactWithDialog(open) {
+    if (htmlDialog.length > 0) {
+        htmlDialog.forEach((dialog) => {
+            dialog.close()
+            if (open) dialog.showModal()
+        })
+    }
 }

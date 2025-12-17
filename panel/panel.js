@@ -95,12 +95,8 @@ function getDownEventElements() {
             })
             return downEvents
         })()`, (result, error) => {
-            if (error) {
-                console.error("Error:", error)
-            } else {
-                testRan = true
-                initiateTest(result)
-            }
+            testRan = true
+            initiateTest(result)
         })
     }
 }
@@ -158,7 +154,6 @@ function initiateTest(downEvents) {
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                                 if (error) {
-                                    console.log(error)
                                     window.alert("Element was not found in DOM!")
                                 }
                             })
@@ -209,15 +204,11 @@ function initiateTest(downEvents) {
                                 const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
                                 if(element) return true
                                 else return false})()`, (result, error) => {
-                        if (error) {
-                            console.log(error)
-                        } else {
-                            if (!result) {
-                                let notExisitingText = document.createElement("b")
-                                notExisitingText.textContent += ' Element is not in DOM!'
-                                notExisitingText.style.color = "red"
-                                li.appendChild(notExisitingText)
-                            }
+                        if (!result) {
+                            let notExisitingText = document.createElement("b")
+                            notExisitingText.textContent += ' Element is not in DOM!'
+                            notExisitingText.style.color = "red"
+                            li.appendChild(notExisitingText)
                         }
                     })
                     li.addEventListener("click", () => {
@@ -226,7 +217,6 @@ function initiateTest(downEvents) {
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                             if (error) {
-                                console.log(error)
                                 window.alert("Element was not found in DOM!")
                             }
                         })
@@ -333,9 +323,7 @@ function displayFormMarkings() {
                     else input.setAttribute("style", "")
                 })
             }
-            })()`, (result, error) => {
-            if (error) console.error("Error:", error)
-        })
+            })()`)
         setVisibility(changedFormsList, checkboxFormResults)
     }
 }
@@ -387,7 +375,5 @@ function iterativelyHighlightElements() {
                 }
             }
             highlightElements()
-        })()`, (result, error) => {
-        if (error) console.error("Error:", error)
-    })
+        })()`)
 }

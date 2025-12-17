@@ -59,18 +59,6 @@ displayConfirmButton.addEventListener("click", clearDisplay)
 const displayCancelButton = document.getElementById("displayCancel")
 displayCancelButton.addEventListener("click", () => displayDialog.close())
 
-// DEBUG: Display all items in storage
-chrome.storage.sync.get(null, (items) => {
-    console.log(items);
-});
-
-// DEBUG: Monitor how much space the storage takes up
-chrome.storage.sync.getBytesInUse(null, (bytes) => {
-    console.log("Sync storage in bytes:", bytes);
-});
-
-// DEBUG: Delete entire sync.storage :chrome.storage.sync.clear()
-
 // Save options
 function saveOptions() {
     const slowTest = checkboxSlow.checked

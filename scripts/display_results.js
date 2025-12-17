@@ -106,15 +106,7 @@ function displayResults(colors, downEvents, checkboxes) {
                         } else displayUnobservable = false
                     }
                 }
-                /*
-                console.log("Problem:", problemElements)
-                console.log("Warning:", warningElements)
-                console.log("Unobservable:", unobservableElements)
-    
-                console.log("DisplayProblem:", displayProblem)
-                console.log("DisplayWarning:", displayWarning)
-                console.log("DisplayUnobservable:", displayUnobservable)
-                */
+                
                 // Display infoBoxes depending on whether the Down-Event and States are checked or unchecked
                 if (problemElements.length > 0) {
                     problemElements.forEach((eventListener) => {
