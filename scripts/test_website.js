@@ -270,6 +270,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             warning.style.fontFamily = "Arial"
             warning.style.fontSize = "xx-large"
             document.body.prepend(warning)
+            break;
         }
     }
 
