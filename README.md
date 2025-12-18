@@ -18,22 +18,31 @@ Options allow for further customization:
 Additionally, after running the test, the results can be further customized:
 - Display certain states (e.g. only display elements with the "problem" state).
 - Display certain down-events (e.g. only display touchstart down-events).
-- Display input and textarea element changes.
+- Display input and textarea ele>t changes.
 
 More features include:
 - Clicking on any result and viewing the element in the "elements" panel.
 - Personalizing your settings by being able to save options.
 - Iteratively highlighting all elements with down-events. 
 
+## Usage
+1. Open the website that you would like to test.
+2. Open the Chrome DevTools:
+   * Either by pressing the F12 key.
+   * Or by right-clicking on the website and selecting "inspect".
+4. Within the Chrome DevTools: Click on the ">>" Symbol in the upper bar and select the "Down-Events Finder" tab.
+5. You can now test the currently viewed website by clicking on the "Start Test" button in the "Down-Events Finder" panel.
+
 ## Installation
 1. Clone the repository or download the ZIP file and extract it.
 2. Open your Chrome extension settings (Settings / Three dots -> Extensions -> Manage Extensions).
-3. Click on "Load unpacked".
-4. Navigate to the folder containing the extension (default name: Down-Event-Finder).
-5. Click on "Select Folder".
-6. Navigate to the details page of the extension
-7. Turn on the extension and change any additional settings.
-8. The extension can now be used on any page by opening the Chrome devtools and selecting the "Down-Events Finder" panel.
+3. Enable "Developer mode" by clicking on the switch in the top-right corner. 
+4. Click on "Load unpacked".
+5. Navigate to the folder containing the extension (default name: Down-Event-Finder).
+6. Click on "Select Folder".
+7. Navigate to the details page of the extension
+8. Turn on the extension and change any additional settings.
+9. The extension can now be used on any page by opening the Chrome devtools and selecting the "Down-Events Finder" panel.
 
 ## Development
 1. Clone the repository.
@@ -45,6 +54,7 @@ Websites for testing the extension can be found on [GitHub](https://github.com/P
 ## License
 This extension is licensed under the MIT license.
 View the LICENSE.txt file for more information.
+
 
 
 
