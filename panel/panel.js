@@ -122,9 +122,9 @@ function initiateTest(downEvents) {
             const totalDownEvents = unobservableDownEvents.length + warningDownEvents.length + problemDownEvents.length
             allDownEvents = unobservableDownEvents.concat(warningDownEvents, problemDownEvents)
 
-            let resultNode = document.getElementsByClassName("testResults")[0]
+            let resultNode = document.getElementById("testResults")
             let h3 = document.createElement("h3")
-            document.getElementById("results").classList.remove("hidden")
+            setVisibility(document.getElementById("results"), true)
 
             if (elementsWithDownEventsLength === 0 || elementsWithDownEventsLength == undefined) {
                 h3.textContent = "Website does not have any down-events!"
@@ -329,51 +329,32 @@ function displayFormMarkings() {
 }
 
 // Iteratively highlight elements
-function iterativelyHighlightElements() {
+async function iterativelyHighlightElements() {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = getColors()
-    chrome.devtools.inspectedWindow.eval(`(function(){
-            let i = 0
-            let styleAttributes = []
-            let downEvents = document.body.querySelectorAll("[data-downeventsfinder-id]")
-            let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
-            let speed = Number(window.prompt("Enter the speed (milliseconds)", 1000))
-            while(isNaN(speed)){
-                window.alert("Enter a valid number!")
-                speed = Number(window.prompt("Enter the speed (milliseconds)"))
-            }
-            let elementOutline, elementBackground = undefined
-            downEvents.forEach((obj) => {
-                styleAttributes.push(obj.style.cssText)
-                obj.setAttribute("style", "")
-            })
-            if(problemInfoBoxes){
-                problemInfoBoxes.forEach((obj) => obj.style.display = "none")
-            }
-            function highlightElements(){
-                if (i > 0) {
-                    downEvents[i - 1].style.outline = ""
-                    downEvents[i - 1].style.backgroundColor = ""
-                    downEvents[i - 1].style.transform = ""
-                }
-                if (i < downEvents.length){
-                    let element = downEvents[i]
-                    element.style.backgroundColor = "${highlightBackgroundColor}"
-                    element.style.outline = "4px solid ${highlightBorderColor}"
-                    element.style.transform = "scale(1.2)"
-                    element.scrollIntoView({block: "center", inline: "center"})
-                    i++
-                    setTimeout(highlightElements, speed)
-                } else {
-                    downEvents.forEach((obj) => {
-                        obj.setAttribute("style", styleAttributes[0])
-                        styleAttributes.shift()
-                    })
-                    if(problemInfoBoxes){
-                        problemInfoBoxes.forEach((obj) => obj.style.display = "inline")
-                    }
-                    window.alert("Finished highlighting elements!")
-                }
-            }
-            highlightElements()
-        })()`)
+    chrome.scripting.executeScript({
+        target: { tabId: chrome.devtools.inspectedWindow.tabId },
+        files: ["./scripts/iterative_highlight.js"]
+    }, () => {
+        chrome.scripting.executeScript({
+            target: { tabId: chrome.devtools.inspectedWindow.tabId },
+            args: [highlightBackgroundColor, highlightBorderColor],
+            func: (...args) => iterativelyHighlightElements(...args)
+        }).then((results) => {
+            displayResults()
+        })
+    })
 }
+
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+    // changeInfo.status == "complete" || changeInfo.url
+    if (changeInfo.status == "complete") {
+        console.log("TabId:", tabId)
+        console.log("ChangeInfo:", changeInfo)
+        console.log("Tab:", tab)
+        let testResults = document.getElementById("testResults")
+        allDownEvents = undefined
+        testRan = false
+        setVisibility(document.getElementById("results"), false)
+        if (testResults.hasChildNodes()) document.getElementById("testResults").replaceChildren()
+    }
+})

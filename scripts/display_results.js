@@ -2,10 +2,22 @@ function displayResults(colors, downEvents, checkboxes) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     const [checkboxProblem, checkboxWarning, checkboxUnobservable,
         checkboxMousedown, checkboxPointerdown, checkboxTouchstart] = checkboxes
+    if (!document.getElementById("sytleElementDownEventFinder")) {
+        let style = document.createElement('style')
+        style.setAttribute("id", "sytleElementDownEventFinder")
+        style.innerHTML = `.warningAttributeDownEventFinder {
+            border: 4px dashed ${primaryWarningColor} !important; 
+            outline: 4px dashed ${secondaryWarningColor} !important;
+        } 
+        .problemAttributeDownEventFinder {
+            border: 5px solid ${primaryProblemColor} !important; 
+            outline: 5px solid ${secondaryProblemColor} !important;
+        }`
+        document.head.appendChild(style)
+    }
+
     for (const [key, value] of Object.entries(downEvents)) {
         const element = document.querySelector(`[data-downEventsFinder-id=${key}]`)
-        const warningStyleAttribute = `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important;`
-        const problemStyleAttrbiute = `border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;`
         if (element) {
             // Simple Case: Element only has a single down-event
             if (value.length === 1) {
@@ -36,11 +48,11 @@ function displayResults(colors, downEvents, checkboxes) {
                 }
                 if (displayDownEvent && displayState) {
                     if (state === "problem") {
-                        element.setAttribute("style", problemStyleAttrbiute)
+                        changeClass(element, "problem")
                         element.nextElementSibling.style.display = "inline"
-                    } else element.setAttribute("style", warningStyleAttribute)
+                    } else changeClass(element, "warning")
                 } else {
-                    element.setAttribute("style", "")
+                    changeClass(element, null)
                     if (state === "problem") element.nextElementSibling.style.display = "none"
                 }
             } else {
@@ -106,7 +118,6 @@ function displayResults(colors, downEvents, checkboxes) {
                         } else displayUnobservable = false
                     }
                 }
-                
                 // Display infoBoxes depending on whether the Down-Event and States are checked or unchecked
                 if (problemElements.length > 0) {
                     problemElements.forEach((eventListener) => {
@@ -131,10 +142,26 @@ function displayResults(colors, downEvents, checkboxes) {
                     })
                 }
                 // Change style attribute
-                if (displayProblem) element.setAttribute("style", problemStyleAttrbiute)
-                else if (displayWarning || displayUnobservable) element.setAttribute("style", warningStyleAttribute)
-                else element.setAttribute("style", "")
+                if (displayProblem) changeClass(element, "problem") 
+                else if (displayWarning || displayUnobservable) changeClass(element, "warning") 
+                else changeClass(element, null)
             }
         }
+    }
+}
+
+function changeClass(element, state) {
+    switch (state) {
+        case "problem":
+            element.classList.add("problemAttributeDownEventFinder")
+            element.classList.remove("warningAttributeDownEventFinder")
+            break;
+        case "warning":
+            element.classList.add("warningAttributeDownEventFinder")
+            element.classList.remove("problemAttributeDownEventFinder")
+            break;
+        case null:
+            element.classList.remove("problemAttributeDownEventFinder", "warningAttributeDownEventFinder")
+            break;
     }
 }
