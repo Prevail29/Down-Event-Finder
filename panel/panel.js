@@ -129,91 +129,33 @@ function initiateTest(downEvents) {
             if (elementsWithDownEventsLength === 0 || elementsWithDownEventsLength == undefined) {
                 h3.textContent = "Website does not have any down-events!"
                 resultNode.appendChild(h3)
-            } else {
-                h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
+                return
+            }
+
+            h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
-                resultNode.appendChild(h3)
-
-                if (formsChanged) {
-                    let formDiv = document.createElement("div")
-                    formDiv.id = ("changedFormsList")
-                    let h4Forms = document.createElement("h4")
-                    let formList = document.createElement("ol")
-                    h4Forms.textContent = "Form Elements changed!"
-                    h4Forms.style.color = "red"
-                    resultNode.appendChild(formDiv)
-                    formDiv.appendChild(h4Forms)
-                    formDiv.appendChild(formList)
-                    changedFormElements.forEach((obj) => {
-                        let li = document.createElement("li")
-                        li.textContent = obj.tagName
-                        if (obj.tagName === "input") li.textContent += " (File Type: " + obj.type + ")"
-                        li.addEventListener("click", () => {
-                            chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downeventsfinder-form-id=${obj.formId}]')
-                                inspect(element)
-                                element.scrollIntoView()})()`, (result, error) => {
-                                if (error) {
-                                    window.alert("Element was not found in DOM!")
-                                }
-                            })
-                        })
-                        formList.appendChild(li)
-                    })
-                }
-
-                if (eventListenersSum > totalDownEvents) {
-                    let duplicateEventListeners = eventListenersSum - totalDownEvents
-                    h4Duplicates = document.createElement("h4")
-                    h4Duplicates.textContent = `${duplicateEventListeners} duplicate down-events were cut`
-                    resultNode.appendChild(h4Duplicates)
-                }
-
-                let divUnobservable = document.createElement("div")
-                divUnobservable.id = "resultsUnobservable"
-                let h4Unobservable = document.createElement("h4")
-                h4Unobservable.textContent = `${unobservableDownEvents.length} down-event${unobservableDownEvents.length === 1 ? " was" : "s were"} unobservable`
-                divUnobservable.appendChild(h4Unobservable)
-                let listUnobservable = document.createElement("ol")
-
-                let divWarning = document.createElement("div")
-                divWarning.id = "resultsWarning"
-                let h4Warning = document.createElement("h4")
-                h4Warning.textContent = `${warningDownEvents.length} down-event${warningDownEvents.length === 1 ? "" : "s"} caused minor changes`
-                divWarning.appendChild(h4Warning)
-                let listWarning = document.createElement("ol")
-
-                let divProblem = document.createElement("div")
-                divProblem.id = "resultsProblem"
-                let h4Problem = document.createElement("h4")
-                h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems`
-                divProblem.appendChild(h4Problem)
-                let listProblem = document.createElement("ol")
-
-                allDownEvents.forEach((obj) => {
+            resultNode.appendChild(h3)
+            let paragraphNotice = document.createElement("p")
+            paragraphNotice.textContent = "Notice: iFrame and shadow DOM down-events cannot be detected."
+            resultNode.appendChild(paragraphNotice)            
+        
+            if (formsChanged) {
+                let formDiv = document.createElement("div")
+                formDiv.id = ("changedFormsList")
+                let h4Forms = document.createElement("h4")
+                let formList = document.createElement("ol")
+                h4Forms.textContent = "Form Elements changed!"
+                h4Forms.style.color = "red"
+                resultNode.appendChild(formDiv)
+                formDiv.appendChild(h4Forms)
+                formDiv.appendChild(formList)
+                changedFormElements.forEach((obj) => {
                     let li = document.createElement("li")
-                    li.classList.add("resultListEntry")
-                    let trimmedId = obj.dataId.replace(/\D/g, "")
-                    li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + "; Element-ID: " + trimmedId + ")."
-                    if (!obj.visibility) {
-                        let invisibleHintText = document.createElement("b")
-                        invisibleHintText.textContent = ' Element has "display:none".'
-                        li.appendChild(invisibleHintText)
-                    }
-                    chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
-                                if(element) return true
-                                else return false})()`, (result, error) => {
-                        if (!result) {
-                            let notExisitingText = document.createElement("b")
-                            notExisitingText.textContent += ' Element is not in DOM!'
-                            notExisitingText.style.color = "red"
-                            li.appendChild(notExisitingText)
-                        }
-                    })
+                    li.textContent = obj.tagName
+                    if (obj.tagName === "input") li.textContent += " (File Type: " + obj.type + ")"
                     li.addEventListener("click", () => {
                         chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
+                                const element = document.querySelector('[data-downeventsfinder-form-id=${obj.formId}]')
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                             if (error) {
@@ -221,28 +163,90 @@ function initiateTest(downEvents) {
                             }
                         })
                     })
-                    switch (obj.state) {
-                        case "unobservable":
-                            listUnobservable.appendChild(li)
-                            break;
-                        case "warning":
-                            listWarning.appendChild(li)
-                            break;
-                        case "problem":
-                            listProblem.appendChild(li)
-                            break;
+                    formList.appendChild(li)
+                })
+            }
+
+            if (eventListenersSum > totalDownEvents) {
+                let duplicateEventListeners = eventListenersSum - totalDownEvents
+                h4Duplicates = document.createElement("h4")
+                h4Duplicates.textContent = `${duplicateEventListeners} duplicate down-events were cut`
+                resultNode.appendChild(h4Duplicates)
+            }
+
+            let divUnobservable = document.createElement("div")
+            divUnobservable.id = "resultsUnobservable"
+            let h4Unobservable = document.createElement("h4")
+            h4Unobservable.textContent = `${unobservableDownEvents.length} down-event${unobservableDownEvents.length === 1 ? " was" : "s were"} unobservable`
+            divUnobservable.appendChild(h4Unobservable)
+            let listUnobservable = document.createElement("ol")
+
+            let divWarning = document.createElement("div")
+            divWarning.id = "resultsWarning"
+            let h4Warning = document.createElement("h4")
+            h4Warning.textContent = `${warningDownEvents.length} down-event${warningDownEvents.length === 1 ? "" : "s"} caused minor changes`
+            divWarning.appendChild(h4Warning)
+            let listWarning = document.createElement("ol")
+
+            let divProblem = document.createElement("div")
+            divProblem.id = "resultsProblem"
+            let h4Problem = document.createElement("h4")
+            h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems`
+            divProblem.appendChild(h4Problem)
+            let listProblem = document.createElement("ol")
+
+            allDownEvents.forEach((obj) => {
+                let li = document.createElement("li")
+                li.classList.add("resultListEntry")
+                let trimmedId = obj.dataId.replace(/\D/g, "")
+                li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + "; Element-ID: " + trimmedId + ")."
+                if (!obj.visibility) {
+                    let invisibleHintText = document.createElement("b")
+                    invisibleHintText.textContent = ' Element has "display:none".'
+                    li.appendChild(invisibleHintText)
+                }
+                chrome.devtools.inspectedWindow.eval(`(function(){
+                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
+                                if(element) return true
+                                else return false})()`, (result, error) => {
+                    if (!result) {
+                        let notExisitingText = document.createElement("b")
+                        notExisitingText.textContent += ' Element is not in DOM!'
+                        notExisitingText.style.color = "red"
+                        li.appendChild(notExisitingText)
                     }
                 })
-                divUnobservable.appendChild(listUnobservable)
-                divWarning.appendChild(listWarning)
-                divProblem.appendChild(listProblem)
+                li.addEventListener("click", () => {
+                    chrome.devtools.inspectedWindow.eval(`(function(){
+                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
+                                inspect(element)
+                                element.scrollIntoView()})()`, (result, error) => {
+                        if (error) {
+                            window.alert("Element was not found in DOM!")
+                        }
+                    })
+                })
+                switch (obj.state) {
+                    case "unobservable":
+                        listUnobservable.appendChild(li)
+                        break;
+                    case "warning":
+                        listWarning.appendChild(li)
+                        break;
+                    case "problem":
+                        listProblem.appendChild(li)
+                        break;
+                }
+            })
+            divUnobservable.appendChild(listUnobservable)
+            divWarning.appendChild(listWarning)
+            divProblem.appendChild(listProblem)
 
-                resultNode.append(divUnobservable, divWarning, divProblem)
+            resultNode.append(divUnobservable, divWarning, divProblem)
 
-                if (problemDownEvents.length > 0) createProblemBoxes(problemDownEvents)
-                displayResults()
-                if (formsChanged) displayFormMarkings()
-            }
+            if (problemDownEvents.length > 0) createProblemBoxes(problemDownEvents)
+            displayResults()
+            if (formsChanged) displayFormMarkings()
         })
     })
 }
@@ -305,27 +309,19 @@ function displayResults() {
 // Change the visibility of form markings
 function displayFormMarkings() {
     const checkboxFormResults = document.getElementById("formResults").checked
-    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = getColors()
     let changedFormsList = document.getElementById("changedFormsList")
-    if (changedFormsList) {
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            const styleAttributeProblem = "outline: 5px dotted ${primaryProblemColor} !important; border: 5px dotted ${secondaryProblemColor} !important;"
-            const styleAttributeWarning = "outline: 5px dotted ${primaryWarningColor} !important; border: 5px dotted ${secondaryWarningColor} !important;"
-            let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
-            const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
-            targetFormElements.forEach((element) => {
-                if (${checkboxFormResults}) element.setAttribute("style", styleAttributeProblem)
-                else element.setAttribute("style", "")
-            })
-            if(fileInputs){
-                fileInputs.forEach((input) => {
-                    if (${checkboxFormResults}) input.setAttribute("style", styleAttributeWarning)
-                    else input.setAttribute("style", "")
-                })
-            }
-            })()`)
-        setVisibility(changedFormsList, checkboxFormResults)
-    }
+    chrome.scripting.executeScript({
+        target: { tabId: chrome.devtools.inspectedWindow.tabId },
+        files: ["./scripts/display_results.js"]
+    }, () => {
+        chrome.scripting.executeScript({
+            target: { tabId: chrome.devtools.inspectedWindow.tabId },
+            args: [getColors(), checkboxFormResults],
+            func: (...args) => displayFormResults(...args)
+        }).then((results) => {
+            setVisibility(changedFormsList, checkboxFormResults)
+        })
+    })
 }
 
 // Iteratively highlight elements
@@ -346,15 +342,20 @@ async function iterativelyHighlightElements() {
 }
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-    // changeInfo.status == "complete" || changeInfo.url
     if (changeInfo.status == "complete") {
-        console.log("TabId:", tabId)
-        console.log("ChangeInfo:", changeInfo)
-        console.log("Tab:", tab)
-        let testResults = document.getElementById("testResults")
+        // console.log("TabId:", tabId)
+        // console.log("ChangeInfo:", changeInfo)
+        // console.log("Tab:", tab)
         allDownEvents = undefined
         testRan = false
+        let testResults = document.getElementById("testResults")
         setVisibility(document.getElementById("results"), false)
         if (testResults.hasChildNodes()) document.getElementById("testResults").replaceChildren()
+        chrome.devtools.inspectedWindow.eval(`(function(){
+            let stylingElement = document.getElementById("styleElementDownEventFinder")
+            let problemBoxes = document.querySelectorAll(".problemInfoBox")
+            if (stylingElement) stylingElement.remove()
+            if (problemBoxes) problemBoxes.forEach((element) => element.remove())
+        })()`)
     }
 })

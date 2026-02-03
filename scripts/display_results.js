@@ -2,14 +2,14 @@ function displayResults(colors, downEvents, checkboxes) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
     const [checkboxProblem, checkboxWarning, checkboxUnobservable,
         checkboxMousedown, checkboxPointerdown, checkboxTouchstart] = checkboxes
-    if (!document.getElementById("sytleElementDownEventFinder")) {
+    if (!document.getElementById("styleElementDownEventFinder")) {
         let style = document.createElement('style')
-        style.setAttribute("id", "sytleElementDownEventFinder")
-        style.innerHTML = `.warningAttributeDownEventFinder {
+        style.setAttribute("id", "styleElementDownEventFinder")
+        style.innerHTML = `.elementWarningStylingDownEventFinder {
             border: 4px dashed ${primaryWarningColor} !important; 
             outline: 4px dashed ${secondaryWarningColor} !important;
         } 
-        .problemAttributeDownEventFinder {
+        .elementProblemStylingDownEventFinder {
             border: 5px solid ${primaryProblemColor} !important; 
             outline: 5px solid ${secondaryProblemColor} !important;
         }`
@@ -142,8 +142,8 @@ function displayResults(colors, downEvents, checkboxes) {
                     })
                 }
                 // Change style attribute
-                if (displayProblem) changeClass(element, "problem") 
-                else if (displayWarning || displayUnobservable) changeClass(element, "warning") 
+                if (displayProblem) changeClass(element, "problem")
+                else if (displayWarning || displayUnobservable) changeClass(element, "warning")
                 else changeClass(element, null)
             }
         }
@@ -153,15 +153,40 @@ function displayResults(colors, downEvents, checkboxes) {
 function changeClass(element, state) {
     switch (state) {
         case "problem":
-            element.classList.add("problemAttributeDownEventFinder")
-            element.classList.remove("warningAttributeDownEventFinder")
+            element.classList.add("elementProblemStylingDownEventFinder")
+            element.classList.remove("elementWarningStylingDownEventFinder")
             break;
         case "warning":
-            element.classList.add("warningAttributeDownEventFinder")
-            element.classList.remove("problemAttributeDownEventFinder")
+            element.classList.add("elementWarningStylingDownEventFinder")
+            element.classList.remove("elementProblemStylingDownEventFinder")
             break;
         case null:
-            element.classList.remove("problemAttributeDownEventFinder", "warningAttributeDownEventFinder")
+            element.classList.remove("elementProblemStylingDownEventFinder", "elementWarningStylingDownEventFinder")
             break;
+    }
+}
+
+function displayFormResults(colors, checkboxFormResults) {
+    const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor] = colors
+    const formStyling = `.formStylingProblemDownEventFinder {
+        outline: 5px dotted ${primaryProblemColor} !important;
+        border: 5px dotted ${secondaryProblemColor} !important; 
+    } 
+    .formStylingWarningDownEventFinder {
+        outline: 5px dotted ${primaryWarningColor} !important; 
+        border: 5px dotted ${secondaryWarningColor} !important;
+    }`
+    document.getElementById("styleElementDownEventFinder").innerHTML += formStyling
+    let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+    const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
+    targetFormElements.forEach((element) => {
+        if (checkboxFormResults) element.classList.add("formStylingProblemDownEventFinder")
+        else element.classList.remove("formStylingProblemDownEventFinder")
+    })
+    if (fileInputs) {
+        fileInputs.forEach((input) => {
+            if (checkboxFormResults) input.classList.add("formStylingWarningDownEventFinder")
+            else input.classList.remove("formStylingWarningDownEventFinder")
+        })
     }
 }

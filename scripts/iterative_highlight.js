@@ -2,7 +2,7 @@ async function iterativelyHighlightElements(highlightBackgroundColor, highlightB
     let i = 0
     let downEvents = document.body.querySelectorAll("[data-downeventsfinder-id]")
     let problemInfoBoxes = document.querySelectorAll('.problemInfoBox')
-    let styleElement = document.getElementById("sytleElementDownEventFinder")
+    let styleElement = document.getElementById("styleElementDownEventFinder")
     let speed = window.prompt("Enter the speed (milliseconds):", 1000)
     if (speed === null) return
     while (isNaN(speed)) {
@@ -16,7 +16,7 @@ async function iterativelyHighlightElements(highlightBackgroundColor, highlightB
         if (i > 0) removeStyling(downEvents[i - 1])
         let element = downEvents[i]
         element.style.backgroundColor = `${highlightBackgroundColor}`
-        element.style.outline = `4px solid ${highlightBorderColor}`
+        element.style.border = `4px solid ${highlightBorderColor}`
         element.style.transform = "scale(1.2)"
         element.scrollIntoView({ block: "center", inline: "center" })
         i++
@@ -31,7 +31,7 @@ async function iterativelyHighlightElements(highlightBackgroundColor, highlightB
 }
 
 function removeStyling(downEvent) {
-    downEvent.style.outline = ""
+    downEvent.style.border = ""
     downEvent.style.backgroundColor = ""
     downEvent.style.transform = ""
 }

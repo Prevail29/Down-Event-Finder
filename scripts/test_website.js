@@ -139,14 +139,30 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     if (slowCheckbox) {
         // Slow test
         let i = 0
+        let style = document.createElement('style')
+        style.setAttribute("id", "styleElementDownEventFinder")
+        style.innerHTML = `.elementWarningStylingDownEventFinder {
+            border: 4px dashed ${primaryWarningColor} !important; 
+            outline: 4px dashed ${secondaryWarningColor} !important;
+        } 
+        .elementProblemStylingDownEventFinder {
+            border: 5px solid ${primaryProblemColor} !important; 
+            outline: 5px solid ${secondaryProblemColor} !important;
+        }`
+        document.head.appendChild(style)
+        let firstElement = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
+        firstElement.setAttribute("style",
+            `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
         await new Promise(resolve => setTimeout(function loopThroughElements() {
             let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
             let elementTagName = element.tagName
             let eventListeners = downEvents[i].downEvent
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
-            document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
-                .setAttribute("style",
-                    `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
+            if (i + 1 < downEvents.length) {
+                document.querySelector(`[data-downeventsfinder-id=${downEvents[i + 1].elementId}]`)
+                    .setAttribute("style",
+                        `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
+            }
             element.scrollIntoView({ block: "center", inline: "center" })
             eventListeners.forEach(event => {
                 observer.observe(target, config)
@@ -171,24 +187,27 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                     visibility: !(getComputedStyle(element).display === "none"),
                     state: state
                 }
+                element.style.border = ""
+                element.style.backgroundColor = ""
+                element.style.transform = ""
                 switch (state) {
                     case State.UNOBSERVABLE:
                         if (element.dataset.downeventsfinderState != "problem" && element.dataset.downeventsfinderState != "warning") {
                             element.setAttribute("data-downeventsfinder-state", State.UNOBSERVABLE)
-                            element.setAttribute("style", `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important;`)
+                            element.classList.add("elementWarningStylingDownEventFinder")
                         }
                         results.unobservableDownEvents.push(completeElement)
                         break;
                     case State.WARNING:
                         if (element.dataset.downeventsfinderState != "problem") {
                             element.setAttribute("data-downeventsfinder-state", State.WARNING)
-                            element.setAttribute("style", `border: 4px dashed ${primaryWarningColor} !important; outline: 4px dashed ${secondaryWarningColor} !important;`)
+                            element.classList.add("elementWarningStylingDownEventFinder")
                         }
                         results.warningDownEvents.push(completeElement)
                         break;
                     case State.PROBLEM:
                         element.setAttribute("data-downeventsfinder-state", State.PROBLEM)
-                        element.setAttribute("style", `border: 5px solid ${primaryProblemColor} !important; outline: 5px solid ${secondaryProblemColor} !important;`)
+                        element.classList.add("elementProblemStylingDownEventFinder")
                         completeElement.problemMessage = message
                         results.problemDownEvents.push(completeElement)
                         break;
@@ -198,7 +217,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             i++
             if (i < downEvents.length) setTimeout(loopThroughElements, speed)
             else resolve()
-        }, 0))
+        }, speed))
     }
     else {
         // Regular test
