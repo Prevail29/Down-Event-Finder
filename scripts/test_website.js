@@ -92,10 +92,10 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 if (filter["sameAttributeFilter"] && (oldAttributes === newAttributes) && (mutationTarget.tagName != "INPUT")) {
                     return [State.WARNING, message]
                 }
-                let sanitizedTarget = mutationTarget.cloneNode(false)
+                let clonedTarget = mutationTarget.cloneNode(false)
                 message = [`Attribute change:`, `Caused by: ${eventType}`,
                     `Old Attribute Value: ${oldAttributes}`, `New Attribute Value: ${newAttributes}`,
-                    `Mutation Target: ${sanitizedTarget.outerHTML}`, `Mutation Attribute Name: ${mutationAttributeName}`]
+                    `Mutation Target: ${clonedTarget.outerHTML}`, `Mutation Attribute Name: ${mutationAttributeName}`]
                 break;
             // Filter childList
             case "childList":
@@ -104,6 +104,10 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 let removedNodes = mutations[0].removedNodes
                 if ((filter["headTitleFilter"]) && (nodeName == "HEAD" || nodeName == "TITLE")) {
                     return [State.WARNING, message]
+                }
+                if (addedNodes[0].nodeName === "P" && addedNodes[0].hasAttribute("data-downeventsfinder-windowopen")) {
+                    message = [`Element uses the window.open() method`, `Caused by: ${eventType}`]
+                    return [State.PROBLEM, message]
                 }
                 let addedNodesCopy = []
                 let removedNodesCopy = []

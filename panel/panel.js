@@ -101,8 +101,26 @@ function getDownEventElements() {
     }
 }
 
+// Add script to catch window.open
+function preventWindowOpen() {
+    chrome.devtools.inspectedWindow.eval(`(function(){
+        if (!document.getElementById("windowOpenBlockingDownEventFinder")){
+            let script = document.createElement("script")
+            script.setAttribute("id", "windowOpenBlockingDownEventFinder")
+            script.textContent = \`window.open = function (url, target, windowFeatures) {
+                let p = document.createElement("p")
+                p.setAttribute("data-downEventsFinder-windowOpen", "")
+                p.style.display = "none"
+                document.body.appendChild(p)
+            }\`
+            document.head.prepend(script)
+        }
+    })()`)
+}
+
 // Test website for changes 
 function initiateTest(downEvents) {
+    preventWindowOpen()
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
         files: ["./scripts/test_website.js"]
@@ -137,8 +155,8 @@ function initiateTest(downEvents) {
             resultNode.appendChild(h3)
             let paragraphNotice = document.createElement("p")
             paragraphNotice.textContent = "Notice: iFrame and shadow DOM down-events cannot be detected."
-            resultNode.appendChild(paragraphNotice)            
-        
+            resultNode.appendChild(paragraphNotice)
+
             if (formsChanged) {
                 let formDiv = document.createElement("div")
                 formDiv.id = ("changedFormsList")
@@ -343,9 +361,6 @@ async function iterativelyHighlightElements() {
 
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     if (changeInfo.status == "complete") {
-        // console.log("TabId:", tabId)
-        // console.log("ChangeInfo:", changeInfo)
-        // console.log("Tab:", tab)
         allDownEvents = undefined
         testRan = false
         let testResults = document.getElementById("testResults")
