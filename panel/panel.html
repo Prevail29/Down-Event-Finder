@@ -3,12 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Down-Events Finder</title>
+    <title>Down-Event Finder</title>
     <link rel="stylesheet" href="panel.css">
 </head>
 
 <body>
-    <h1>Down-Events Finder</h1>
+    <h1>Down-Event Finder</h1>
+    <h2 id="reloadStatus" role="status" aria-atomic="true"></h2>
     <details>
         <summary>Options</summary>
         <div class="behavior">
@@ -100,12 +101,15 @@
     <br>
     <div>
         <button id="initiateButton">Start Test</button>
+        <button id="abortSlowTest" class="hidden">Abort Test</button>
+        <p id="testRanStatus" role="status" aria-atomic="true"></p>
     </div>
     <div id="results" class="hidden">
         <hr>
         <div class="heading">
             <h2>Results</h2>
             <button id="iterateHighlightButton">Iterative Highlight</button>
+            <button id="abortHighlighting" class="hidden">Abort highlighting</button>
         </div>
         <div id="displayResultsOptions">
             <details>

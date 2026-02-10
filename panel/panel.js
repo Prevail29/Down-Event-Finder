@@ -2,8 +2,10 @@ let allDownEvents = undefined // Variable for all Down-Events
 let testRan = false // Boolean if test already ran once on website
 
 // Add event listeners to buttons and checkboxes
-document.getElementById("initiateButton").addEventListener("click", getDownEventElements)
+document.getElementById("initiateButton").addEventListener("click", initiateTest)
 document.getElementById("iterateHighlightButton").addEventListener("click", iterativelyHighlightElements)
+document.getElementById("abortSlowTest").addEventListener("click", abortSlowTest)
+document.getElementById("abortHighlighting").addEventListener("click", abortHighlighting)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
 
@@ -72,9 +74,10 @@ function setVisibility(element, condition) {
     else element.classList.add("hidden")
 }
 
-// Retrieve all down-events from website
-function getDownEventElements() {
+// Get all down-events
+function initiateTest() {
     if (!testRan) {
+        // Retrieve all down-events from website
         chrome.devtools.inspectedWindow.eval(`(function(){
             let id = 1
             let downEvents = []
@@ -87,8 +90,8 @@ function getDownEventElements() {
                         .filter(type => type === "mousedown" || type === "pointerdown" || type === "touchstart")
                 ]
                 if (eventListeners.length > 0) {
-                    let elementId = 'DownEventsFinder-' + id
-                    element.setAttribute("data-downEventsFinder-id", elementId)
+                    let elementId = 'DownEventFinder-' + id
+                    element.setAttribute("data-downEventFinder-id", elementId)
                     downEvents.push({ downEvent: eventListeners, elementId: elementId})
                     id++
                 }
@@ -96,8 +99,22 @@ function getDownEventElements() {
             return downEvents
         })()`, (result, error) => {
             testRan = true
-            initiateTest(result)
+            if (result.length > 0) executeTest(result)
+            else {
+                let h3 = document.createElement("h3")
+                let resultNode = document.getElementById("testResults")
+                h3.textContent = "This website does not have any down-events!"
+                resultNode.appendChild(h3)
+                setVisibility(document.getElementById("results"), true)
+                disableButton(document.getElementById("initiateButton"), true)
+            }
         })
+    } else {
+        let testRanStatus = document.getElementById("testRanStatus")
+        testRanStatus.textContent = "Test already ran!"
+        setTimeout(() => {
+            testRanStatus.textContent = ''
+        }, 3000)
     }
 }
 
@@ -109,7 +126,7 @@ function preventWindowOpen() {
             script.setAttribute("id", "windowOpenBlockingDownEventFinder")
             script.textContent = \`window.open = function (url, target, windowFeatures) {
                 let p = document.createElement("p")
-                p.setAttribute("data-downEventsFinder-windowOpen", "")
+                p.setAttribute("data-downEventFinder-windowOpen", "")
                 p.style.display = "none"
                 document.body.appendChild(p)
             }\`
@@ -119,8 +136,10 @@ function preventWindowOpen() {
 }
 
 // Test website for changes 
-function initiateTest(downEvents) {
+function executeTest(downEvents) {
+    disableButton(document.getElementById("initiateButton"), true)
     preventWindowOpen()
+    if (document.getElementById("slow").checked) setVisibility(document.getElementById("abortSlowTest"), true)
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
         files: ["./scripts/test_website.js"]
@@ -130,6 +149,8 @@ function initiateTest(downEvents) {
             args: [getFilter(), getSlowValues(), getColors(), downEvents],
             func: (...args) => testWebsite(...args)
         }).then((results) => {
+            if (document.getElementById("slow").checked) setVisibility(document.getElementById("abortSlowTest"), false)
+            if (!results[0].result) return
             const elementsWithDownEventsLength = downEvents.length
             const eventListenersSum = downEvents.map(({ downEvent }) => downEvent).flat().length
             const formsChanged = results[0].result.formsChanged
@@ -142,38 +163,31 @@ function initiateTest(downEvents) {
 
             let resultNode = document.getElementById("testResults")
             let h3 = document.createElement("h3")
-            setVisibility(document.getElementById("results"), true)
-
-            if (elementsWithDownEventsLength === 0 || elementsWithDownEventsLength == undefined) {
-                h3.textContent = "Website does not have any down-events!"
-                resultNode.appendChild(h3)
-                return
-            }
-
             h3.textContent = `This Website has ${elementsWithDownEventsLength} element${elementsWithDownEventsLength === 1 ? "" : "s"} causing 
                                   ${totalDownEvents} down-event${totalDownEvents === 1 ? "" : "s"}.`
             resultNode.appendChild(h3)
+            setVisibility(document.getElementById("results"), true)
+
             let paragraphNotice = document.createElement("p")
-            paragraphNotice.textContent = "Notice: iFrame and shadow DOM down-events cannot be detected."
+            paragraphNotice.textContent = "Notice: iFrame and shadow DOM down-events are not being detected."
             resultNode.appendChild(paragraphNotice)
 
             if (formsChanged) {
-                let formDiv = document.createElement("div")
-                formDiv.id = ("changedFormsList")
-                let h4Forms = document.createElement("h4")
+                let detailsForm = document.createElement("details")
+                detailsForm.id = ("resultsForm")
+                detailsForm.setAttribute("open", "")
+                let summaryForm = document.createElement("summary")
                 let formList = document.createElement("ol")
-                h4Forms.textContent = "Form Elements changed!"
-                h4Forms.style.color = "red"
-                resultNode.appendChild(formDiv)
-                formDiv.appendChild(h4Forms)
-                formDiv.appendChild(formList)
+                summaryForm.textContent = "Form Elements changed!"
+                resultNode.appendChild(detailsForm)
+                detailsForm.append(summaryForm, formList)
                 changedFormElements.forEach((obj) => {
                     let li = document.createElement("li")
                     li.textContent = obj.tagName
                     if (obj.tagName === "input") li.textContent += " (File Type: " + obj.type + ")"
                     li.addEventListener("click", () => {
                         chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downeventsfinder-form-id=${obj.formId}]')
+                                const element = document.querySelector('[data-downEventFinder-form-id=${obj.formId}]')
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                             if (error) {
@@ -192,51 +206,49 @@ function initiateTest(downEvents) {
                 resultNode.appendChild(h4Duplicates)
             }
 
-            let divUnobservable = document.createElement("div")
-            divUnobservable.id = "resultsUnobservable"
-            let h4Unobservable = document.createElement("h4")
-            h4Unobservable.textContent = `${unobservableDownEvents.length} down-event${unobservableDownEvents.length === 1 ? " was" : "s were"} unobservable`
-            divUnobservable.appendChild(h4Unobservable)
+            let detailsUnobservable = document.createElement("details")
+            detailsUnobservable.id = "resultsUnobservable"
+            let summaryUnobservable = document.createElement("summary")
+            summaryUnobservable.textContent = `${unobservableDownEvents.length} down-event${unobservableDownEvents.length === 1 ? " was" : "s were"} unobservable`
+            detailsUnobservable.appendChild(summaryUnobservable)
             let listUnobservable = document.createElement("ol")
+            if (unobservableDownEvents.length > 0) detailsUnobservable.setAttribute("open", "")
 
-            let divWarning = document.createElement("div")
-            divWarning.id = "resultsWarning"
-            let h4Warning = document.createElement("h4")
-            h4Warning.textContent = `${warningDownEvents.length} down-event${warningDownEvents.length === 1 ? "" : "s"} caused minor changes`
-            divWarning.appendChild(h4Warning)
+            let detailsWarning = document.createElement("details")
+            detailsWarning.id = "resultsWarning"
+            let summaryWarning = document.createElement("summary")
+            summaryWarning.textContent = `${warningDownEvents.length} down-event${warningDownEvents.length === 1 ? "" : "s"} caused minor changes`
+            detailsWarning.appendChild(summaryWarning)
             let listWarning = document.createElement("ol")
+            if (warningDownEvents.length > 0) detailsWarning.setAttribute("open", "")
 
-            let divProblem = document.createElement("div")
-            divProblem.id = "resultsProblem"
-            let h4Problem = document.createElement("h4")
-            h4Problem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused problems`
-            divProblem.appendChild(h4Problem)
+            let detailsProblem = document.createElement("details")
+            detailsProblem.id = "resultsProblem"
+            let summaryProblem = document.createElement("summary")
+            summaryProblem.textContent = `${problemDownEvents.length} down-event${problemDownEvents.length === 1 ? "" : "s"} caused major changes`
+            detailsProblem.appendChild(summaryProblem)
             let listProblem = document.createElement("ol")
+            if (problemDownEvents.length > 0) detailsProblem.setAttribute("open", "")
 
             allDownEvents.forEach((obj) => {
                 let li = document.createElement("li")
                 li.classList.add("resultListEntry")
-                let trimmedId = obj.dataId.replace(/\D/g, "")
+                let trimmedId = obj.elementId.replace(/\D/g, "")
                 li.textContent = obj.element.toLowerCase() + " (Down-Event: " + obj.eventListener + "; Element-ID: " + trimmedId + ")."
                 if (!obj.visibility) {
                     let invisibleHintText = document.createElement("b")
                     invisibleHintText.textContent = ' Element has "display:none".'
                     li.appendChild(invisibleHintText)
                 }
-                chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
-                                if(element) return true
-                                else return false})()`, (result, error) => {
-                    if (!result) {
-                        let notExisitingText = document.createElement("b")
-                        notExisitingText.textContent += ' Element is not in DOM!'
-                        notExisitingText.style.color = "red"
-                        li.appendChild(notExisitingText)
-                    }
-                })
+                if (obj.canBeFound === false) {
+                    let notExisitingText = document.createElement("b")
+                    notExisitingText.textContent += ' Element is not in DOM!'
+                    notExisitingText.style.color = "red"
+                    li.appendChild(notExisitingText)
+                }
                 li.addEventListener("click", () => {
                     chrome.devtools.inspectedWindow.eval(`(function(){
-                                const element = document.querySelector('[data-downEventsFinder-id=${obj.dataId}]')
+                                const element = document.querySelector('[data-downEventFinder-id=${obj.elementId}]')
                                 inspect(element)
                                 element.scrollIntoView()})()`, (result, error) => {
                         if (error) {
@@ -256,11 +268,20 @@ function initiateTest(downEvents) {
                         break;
                 }
             })
-            divUnobservable.appendChild(listUnobservable)
-            divWarning.appendChild(listWarning)
-            divProblem.appendChild(listProblem)
 
-            resultNode.append(divUnobservable, divWarning, divProblem)
+            let pZero = document.createElement("p")
+            pZero.textContent = "No down-events in this category."
+
+            if (unobservableDownEvents.length > 0) detailsUnobservable.appendChild(listUnobservable)
+            else detailsUnobservable.appendChild(pZero.cloneNode(true))
+
+            if (warningDownEvents.length > 0) detailsWarning.appendChild(listWarning)
+            else detailsWarning.appendChild(pZero.cloneNode(true))
+
+            if (problemDownEvents.length > 0) detailsProblem.appendChild(listProblem)
+            else detailsProblem.appendChild(pZero.cloneNode(true))
+
+            resultNode.append(detailsUnobservable, detailsWarning, detailsProblem)
 
             if (problemDownEvents.length > 0) createProblemBoxes(problemDownEvents)
             displayResults()
@@ -269,6 +290,7 @@ function initiateTest(downEvents) {
     })
 }
 
+// Create Boxes detailing additional information for problem elements
 function createProblemBoxes(problemDownEvents) {
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
@@ -290,7 +312,7 @@ function displayResults() {
     const checkboxMousedown = document.getElementById("mousedownResults").checked
     const checkboxPointerdown = document.getElementById("pointerdownResults").checked
     const checkboxTouchstart = document.getElementById("touchstartResults").checked
-    let groupedDownEvents = Object.groupBy(allDownEvents, ({ dataId }) => dataId)
+    let groupedDownEvents = Object.groupBy(allDownEvents, ({ elementId }) => elementId)
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
         files: ["./scripts/display_results.js"]
@@ -327,7 +349,7 @@ function displayResults() {
 // Change the visibility of form markings
 function displayFormMarkings() {
     const checkboxFormResults = document.getElementById("formResults").checked
-    let changedFormsList = document.getElementById("changedFormsList")
+    let resultsForm = document.getElementById("resultsForm")
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
         files: ["./scripts/display_results.js"]
@@ -337,7 +359,7 @@ function displayFormMarkings() {
             args: [getColors(), checkboxFormResults],
             func: (...args) => displayFormResults(...args)
         }).then((results) => {
-            setVisibility(changedFormsList, checkboxFormResults)
+            setVisibility(resultsForm, checkboxFormResults)
         })
     })
 }
@@ -345,6 +367,8 @@ function displayFormMarkings() {
 // Iteratively highlight elements
 async function iterativelyHighlightElements() {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = getColors()
+    disableButton(document.getElementById("iterateHighlightButton"), true)
+    setVisibility(document.getElementById("abortHighlighting"), true)
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
         files: ["./scripts/iterative_highlight.js"]
@@ -354,17 +378,60 @@ async function iterativelyHighlightElements() {
             args: [highlightBackgroundColor, highlightBorderColor],
             func: (...args) => iterativelyHighlightElements(...args)
         }).then((results) => {
-            displayResults()
+            if (results.result) {
+                displayResults()
+                disableButton(document.getElementById("iterateHighlightButton"), false)
+                setVisibility(document.getElementById("abortHighlighting"), false)
+            }
         })
     })
 }
 
+function abortSlowTest() {
+    chrome.scripting.executeScript({
+        target: { tabId: chrome.devtools.inspectedWindow.tabId },
+        files: ["./scripts/test_website.js"]
+    }, () => {
+        chrome.scripting.executeScript({
+            target: { tabId: chrome.devtools.inspectedWindow.tabId },
+            func: () => abortSlowTest()
+        }).then(() => {
+            disableButton(document.getElementById("initiateButton"), false)
+            testRan = false
+        })
+    })
+}
+
+function abortHighlighting() {
+    chrome.scripting.executeScript({
+        target: { tabId: chrome.devtools.inspectedWindow.tabId },
+        files: ["./scripts/iterative_highlight.js"]
+    }, () => {
+        chrome.scripting.executeScript({
+            target: { tabId: chrome.devtools.inspectedWindow.tabId },
+            func: () => abortHighlighting()
+        })
+    })
+}
+
+// Reload Extension after tab update
+let timeoutID = []
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+    if (changeInfo.status == "loading") {
+        timeoutID.push(setTimeout(setReloadMessage, 1000, "Extension is reloading!"))
+        console.log("Loading:", timeoutID)
+    }
     if (changeInfo.status == "complete") {
         allDownEvents = undefined
         testRan = false
+        timeoutID.forEach((timeout) => clearTimeout(timeout))
+        setReloadMessage("")
+        console.log("Complete:", timeoutID)
+        let testRanStatus = document.getElementById("testRanStatus")
+        testRanStatus.textContent = ""
         let testResults = document.getElementById("testResults")
         setVisibility(document.getElementById("results"), false)
+        disableButton(document.getElementById("initiateButton"), false)
         if (testResults.hasChildNodes()) document.getElementById("testResults").replaceChildren()
         chrome.devtools.inspectedWindow.eval(`(function(){
             let stylingElement = document.getElementById("styleElementDownEventFinder")
@@ -372,5 +439,20 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
             if (stylingElement) stylingElement.remove()
             if (problemBoxes) problemBoxes.forEach((element) => element.remove())
         })()`)
+        timeoutID = []
     }
 })
+
+function disableButton(button, condition) {
+    if (condition) {
+        button.setAttribute("disabled", "")
+        button.classList.add("disabledButton")
+    } else {
+        button.removeAttribute("disabled")
+        button.classList.remove("disabledButton")
+    }
+}
+
+function setReloadMessage(message) {
+    document.getElementById("reloadStatus").textContent = message
+}

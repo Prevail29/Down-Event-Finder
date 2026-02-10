@@ -15,6 +15,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         problemDownEvents: []
     }
 
+    let aborted = false
+
     // Create important Events
     const mousedown = new MouseEvent("mousedown", {
         view: window,
@@ -105,7 +107,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 if ((filter["headTitleFilter"]) && (nodeName == "HEAD" || nodeName == "TITLE")) {
                     return [State.WARNING, message]
                 }
-                if (addedNodes[0].nodeName === "P" && addedNodes[0].hasAttribute("data-downeventsfinder-windowopen")) {
+                if (addedNodes.nodeName && addedNodes[0].nodeName === "P" && addedNodes[0].hasAttribute("data-downEventFinder-windowopen")) {
                     message = [`Element uses the window.open() method`, `Caused by: ${eventType}`]
                     return [State.PROBLEM, message]
                 }
@@ -143,6 +145,9 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     if (slowCheckbox) {
         // Slow test
         let i = 0
+        controller = new AbortController()
+        const signal = controller.signal
+        let timeoutID
         let style = document.createElement('style')
         style.setAttribute("id", "styleElementDownEventFinder")
         style.innerHTML = `.elementWarningStylingDownEventFinder {
@@ -154,79 +159,83 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             outline: 5px solid ${secondaryProblemColor} !important;
         }`
         document.head.appendChild(style)
-        let firstElement = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
+        let firstElement = document.querySelector(`[data-downEventFinder-id=${downEvents[i].elementId}]`)
         firstElement.setAttribute("style",
             `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
-        await new Promise(resolve => setTimeout(function loopThroughElements() {
-            let element = document.querySelector(`[data-downeventsfinder-id=${downEvents[i].elementId}]`)
-            let elementTagName = element.tagName
-            let eventListeners = downEvents[i].downEvent
-            eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
-            if (i + 1 < downEvents.length) {
-                document.querySelector(`[data-downeventsfinder-id=${downEvents[i + 1].elementId}]`)
-                    .setAttribute("style",
-                        `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
-            }
-            element.scrollIntoView({ block: "center", inline: "center" })
-            eventListeners.forEach(event => {
-                observer.observe(target, config)
-                switch (event) {
-                    case "mousedown":
-                        element.dispatchEvent(mousedown)
-                        break;
-                    case "touchstart":
-                        element.dispatchEvent(touchstart)
-                        break;
-                    case "pointerdown":
-                        element.dispatchEvent(pointerdown)
-                        break;
-                }
-                let mutation = observer.takeRecords()
-                observer.disconnect()
-                let [state, message] = callback(mutation, event, eventListeners)
-                let completeElement = {
-                    element: elementTagName,
-                    dataId: downEvents[i].elementId,
-                    eventListener: event,
-                    visibility: !(getComputedStyle(element).display === "none"),
-                    state: state
-                }
-                element.style.border = ""
-                element.style.backgroundColor = ""
-                element.style.transform = ""
-                switch (state) {
-                    case State.UNOBSERVABLE:
-                        if (element.dataset.downeventsfinderState != "problem" && element.dataset.downeventsfinderState != "warning") {
-                            element.setAttribute("data-downeventsfinder-state", State.UNOBSERVABLE)
-                            element.classList.add("elementWarningStylingDownEventFinder")
-                        }
-                        results.unobservableDownEvents.push(completeElement)
-                        break;
-                    case State.WARNING:
-                        if (element.dataset.downeventsfinderState != "problem") {
-                            element.setAttribute("data-downeventsfinder-state", State.WARNING)
-                            element.classList.add("elementWarningStylingDownEventFinder")
-                        }
-                        results.warningDownEvents.push(completeElement)
-                        break;
-                    case State.PROBLEM:
-                        element.setAttribute("data-downeventsfinder-state", State.PROBLEM)
-                        element.classList.add("elementProblemStylingDownEventFinder")
-                        completeElement.problemMessage = message
-                        results.problemDownEvents.push(completeElement)
-                        break;
-                }
-                if (!element.hasAttribute("aria-label")) element.setAttribute("aria-label", `Down-Event Finder: ${state} Down-Event.`)
+        await new Promise(resolve => {
+            signal.addEventListener('abort', () => {
+                clearTimeout(timeoutID)
+                resolve()
+                aborted = true
             })
-            i++
-            if (i < downEvents.length) setTimeout(loopThroughElements, speed)
-            else resolve()
-        }, speed))
-    }
-    else {
+            timeoutID = setTimeout(function loopThroughElements() {
+                let element = document.querySelector(`[data-downEventFinder-id=${downEvents[i].elementId}]`)
+                let elementTagName = element.tagName
+                let eventListeners = downEvents[i].downEvent
+                eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
+                if (i + 1 < downEvents.length) {
+                    document.querySelector(`[data-downEventFinder-id=${downEvents[i + 1].elementId}]`)
+                        .setAttribute("style",
+                            `background-color: ${highlightBackgroundColor} !important; border: 4px solid ${highlightBorderColor} !important; transform: scale(1.2);`)
+                }
+                element.scrollIntoView({ block: "center", inline: "center" })
+                eventListeners.forEach(event => {
+                    observer.observe(target, config)
+                    switch (event) {
+                        case "mousedown":
+                            element.dispatchEvent(mousedown)
+                            break;
+                        case "touchstart":
+                            element.dispatchEvent(touchstart)
+                            break;
+                        case "pointerdown":
+                            element.dispatchEvent(pointerdown)
+                            break;
+                    }
+                    let mutation = observer.takeRecords()
+                    observer.disconnect()
+                    let [state, message] = callback(mutation, event, eventListeners)
+                    let completeElement = {
+                        element: elementTagName,
+                        elementId: downEvents[i].elementId,
+                        eventListener: event,
+                        visibility: !(getComputedStyle(element).display === "none"),
+                        state: state
+                    }
+                    removeStyling(element)
+                    switch (state) {
+                        case State.UNOBSERVABLE:
+                            if (element.dataset.downEventFinderState != "problem" && element.dataset.downEventFinderState != "warning") {
+                                element.setAttribute("data-downEventFinder-state", State.UNOBSERVABLE)
+                                element.classList.add("elementWarningStylingDownEventFinder")
+                            }
+                            results.unobservableDownEvents.push(completeElement)
+                            break;
+                        case State.WARNING:
+                            if (element.dataset.downEventFinderState != "problem") {
+                                element.setAttribute("data-downEventFinder-state", State.WARNING)
+                                element.classList.add("elementWarningStylingDownEventFinder")
+                            }
+                            results.warningDownEvents.push(completeElement)
+                            break;
+                        case State.PROBLEM:
+                            element.setAttribute("data-downEventFinder-state", State.PROBLEM)
+                            element.classList.add("elementProblemStylingDownEventFinder")
+                            completeElement.problemMessage = message
+                            results.problemDownEvents.push(completeElement)
+                            break;
+                    }
+                    if (!element.hasAttribute("aria-label")) element.setAttribute("aria-label", `Down-Event Finder: ${state} Down-Event.`)
+                })
+                i++
+                if (i < downEvents.length) timeoutID = setTimeout(loopThroughElements, speed)
+                else resolve()
+            }, speed)
+        })
+    } else {
         // Regular test
         downEvents.forEach(obj => {
-            let element = document.querySelector(`[data-downeventsfinder-id=${obj.elementId}]`)
+            let element = document.querySelector(`[data-downEventFinder-id=${obj.elementId}]`)
             let elementTagName = element.tagName
             let eventListeners = obj.downEvent
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
@@ -248,23 +257,23 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 let [state, message] = callback(mutation, event, eventListeners)
                 let completeElement = {
                     element: elementTagName,
-                    dataId: obj.elementId,
+                    elementId: obj.elementId,
                     eventListener: event,
                     visibility: !(getComputedStyle(element).display === "none"),
                     state: state
                 }
                 switch (state) {
                     case State.UNOBSERVABLE:
-                        if (element.dataset.downeventsfinderState != "problem" && element.dataset.downeventsfinderState != "warning")
-                            element.setAttribute("data-downeventsfinder-state", State.UNOBSERVABLE)
+                        if (element.dataset.downEventFinderState != "problem" && element.dataset.downEventFinderState != "warning")
+                            element.setAttribute("data-downEventFinder-state", State.UNOBSERVABLE)
                         results.unobservableDownEvents.push(completeElement)
                         break;
                     case State.WARNING:
-                        if (element.dataset.downeventsfinderState != "problem") element.setAttribute("data-downeventsfinder-state", State.WARNING)
+                        if (element.dataset.downEventFinderState != "problem") element.setAttribute("data-downEventFinder-state", State.WARNING)
                         results.warningDownEvents.push(completeElement)
                         break;
                     case State.PROBLEM:
-                        element.setAttribute("data-downeventsfinder-state", State.PROBLEM)
+                        element.setAttribute("data-downEventFinder-state", State.PROBLEM)
                         completeElement.problemMessage = message
                         results.problemDownEvents.push(completeElement)
                         break;
@@ -273,23 +282,13 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
             })
         })
     }
-
+    if (aborted) return
     // Iterate through all Down-Events and check whether the element can be found
     let allDownEvents = results.unobservableDownEvents.concat(results.warningDownEvents, results.problemDownEvents)
     for (let i = 0; i < allDownEvents.length; i++) {
-        let id = allDownEvents[i].dataId
-        let element = document.querySelector(`[data-downeventsfinder-id='${id}']`)
-        if (!element) {
-            let warning = document.createElement("h1")
-            warning.textContent = "Down-Events Finder - Warning: Nodes have been deleted or changed!"
-            warning.style.textAlign = "center"
-            warning.style.background = "white"
-            warning.style.color = "red"
-            warning.style.fontFamily = "Arial"
-            warning.style.fontSize = "xx-large"
-            document.body.prepend(warning)
-            break;
-        }
+        let elementId = allDownEvents[i].elementId
+        let element = getElement(elementId)
+        if (!element) allDownEvents[i].canBeFound = false
     }
 
     // Check whether form values have changed
@@ -297,8 +296,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     if (firstValues.length == secondValues.length) {
         for (let k = 0; k < formElements.length; k++) {
             if (firstValues[k] != secondValues[k]) {
-                let elementId = "DownEventsFinder-FormElement-" + k
-                formElements[k].setAttribute("data-downeventsfinder-form-id", elementId)
+                let elementId = "DownEventFinder-FormElement-" + k
+                formElements[k].setAttribute("data-downEventFinder-form-id", elementId)
                 results.formsChanged = true
                 results.changedFormElements.push({ tagName: formElements[k].tagName.toLowerCase(), type: formElements[k].type, formId: elementId })
             }
@@ -389,4 +388,27 @@ function interactWithDialog(htmlDialog, open) {
             if (open) dialog.showModal()
         })
     }
+}
+
+function getElement(elementId) {
+    const selector = `[data-downEventFinder-id=${elementId}]`
+    let element = document.querySelector(selector)
+    return element
+}
+
+function abortSlowTest() {
+    if (typeof controller !== 'undefined') {
+        controller.abort()
+        let downEvents = document.body.querySelectorAll("[data-downEventFinder-id]")
+        downEvents.forEach((element) => {
+            removeStyling(element)
+            element.classList.remove("elementProblemStylingDownEventFinder", "elementWarningStylingDownEventFinder")
+        })
+    }
+}
+
+function removeStyling(element) {
+    element.style.border = ""
+    element.style.backgroundColor = ""
+    element.style.transform = ""
 }

@@ -17,7 +17,7 @@ function displayResults(colors, downEvents, checkboxes) {
     }
 
     for (const [key, value] of Object.entries(downEvents)) {
-        const element = document.querySelector(`[data-downEventsFinder-id=${key}]`)
+        const element = document.querySelector(`[data-downEventFinder-id=${key}]`)
         if (element) {
             // Simple Case: Element only has a single down-event
             if (value.length === 1) {
@@ -177,7 +177,7 @@ function displayFormResults(colors, checkboxFormResults) {
         border: 5px dotted ${secondaryWarningColor} !important;
     }`
     document.getElementById("styleElementDownEventFinder").innerHTML += formStyling
-    let targetFormElements = document.querySelectorAll('[data-downeventsfinder-form-id]')
+    let targetFormElements = document.querySelectorAll('[data-downEventFinder-form-id]')
     const fileInputs = Array.from(document.body.querySelectorAll('input')).filter((input) => input.type === "file")
     targetFormElements.forEach((element) => {
         if (checkboxFormResults) element.classList.add("formStylingProblemDownEventFinder")

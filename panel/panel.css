@@ -7,6 +7,13 @@
     display: none;
 }
 
+/* Class for disabled buttons */
+.disabledButton {
+    cursor: not-allowed;
+    color: #4D4D4D;
+    background-color: #FAFAFA;
+}
+
 /* Details CSS for Options */
 details {
     border: 1px solid grey;
@@ -72,7 +79,8 @@ details hr {
 }
 
 #optionStatus,
-#displayStatus {
+#displayStatus,
+#testRanStatus {
     font-weight: bold;
 }
 
@@ -100,12 +108,17 @@ button {
     border-radius: 5px;
 }
 
-button:hover {
+button:hover:not(.disabledButton) {
     background-color: #CFCFCF;
 }
 
 #initiateButton {
     padding: 0.4em;
+}
+
+#abortHighlighting,
+#abortSlowTest {
+    margin-left: 0.5em;
 }
 
 /* CSS for results */
@@ -129,4 +142,49 @@ button:hover {
 .heading h2 {
     margin: 0;
     margin-right: 0.5em;
+}
+
+#testResults details {
+    margin-bottom: 1em;
+}
+
+#testResults details p {
+    margin-left: 2em;
+}
+
+#testResults #resultsForm {
+    background-color: #FFB066;
+}
+
+#testResults #resultsForm:not([open]):hover,
+#testResults #resultsForm[open] summary:hover {
+    background-color: #FF932E
+}
+
+#testResults #resultsUnobservable {
+    background-color: #CCEBFF
+}
+
+#testResults #resultsUnobservable:not([open]):hover,
+#testResults #resultsUnobservable[open] summary:hover {
+    background-color: #8ACEFF
+}
+
+#testResults #resultsWarning {
+    background-color: #FFDB8F;
+}
+
+#testResults #resultsWarning:not([open]):hover,
+#testResults #resultsWarning[open] summary:hover {
+    background-color: #FFC23D;
+}
+
+
+#testResults #resultsProblem {
+    background-color: #FDA5A5;
+}
+
+#testResults #resultsProblem:not([open]):hover,
+#testResults #resultsProblem[open] summary:hover {
+    background-color: #FD6868;
 }

@@ -1,7 +1,7 @@
 function createProblemBoxes(problemDownEvents) {
     let problemMessages = []
     problemDownEvents.forEach(obj => {
-        const element = document.querySelector(`[data-downeventsfinder-id='${obj.dataId}']`)
+        const element = document.querySelector(`[data-downEventfinder-id='${obj.elementId}']`)
         const eventListener = obj.eventListener
         problemMessages.push(obj.problemMessage)
         createBox(element, eventListener)
