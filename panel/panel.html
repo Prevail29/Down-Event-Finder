@@ -21,6 +21,8 @@
                 <label for="speed">Testing speed (in milliseconds):</label>
                 <input type="number" id="speed" name="speed" value="10">
             </div>
+            <input type="checkbox" id="autoReload" name="autoReload" checked>
+            <label for="autoReload">Automatically reload the extension</label>
         </div>
         <hr>
         <div class="filter">
@@ -60,7 +62,7 @@
                 <li>If a filter is unchecked, mutations will receive the state "problem".</li>
             </ul>
             <p>Changes to the filters need to be applied <strong>before</strong> the test is run!<br>
-                The default options are recommended, and changes should only be made in very specific circumstances.
+                It is recommended to keep the default options.
             </p>
         </div>
         <hr>
@@ -87,9 +89,9 @@
             </div>
         </div>
         <br>
-        <p id="optionStatus" role="status" aria-atomic="true"></p>
         <button id="optionSave" class="optionButtons">Save Options</button>
         <button id="optionResetDialog" class="optionButtons">Restore Defaults</button>
+        <p id="optionStatus" role="status" aria-atomic="true" class="hidden"></p>
     </details>
     <dialog id="optionDialog">
         <p>
@@ -110,6 +112,7 @@
             <h2>Results</h2>
             <button id="iterateHighlightButton">Iterative Highlight</button>
             <button id="abortHighlighting" class="hidden">Abort highlighting</button>
+            <button id="deleteResults">Delete Results</button>
         </div>
         <div id="displayResultsOptions">
             <details>
@@ -134,9 +137,9 @@
                 <input type="checkbox" id="formResults" name="formResults" checked>
                 <label for="formResults">Marking</label>
                 <br>
-                <p id="displayStatus" role="status" aria-atomic="true"></p>
                 <button id="displaySave" class="optionButtons">Save Display Options</button>
                 <button id="displayResetDialog" class="optionButtons">Restore Display Defaults</button>
+                <p id="displayStatus" role="status" aria-atomic="true" class="hidden"></p>
             </details>
         </div>
         <div id="testResults"></div>

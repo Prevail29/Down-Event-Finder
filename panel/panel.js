@@ -1,11 +1,13 @@
 let allDownEvents = undefined // Variable for all Down-Events
 let testRan = false // Boolean if test already ran once on website
+let timeoutID = [] // Stores all timeoutIDs for properly setting the reload message
 
 // Add event listeners to buttons and checkboxes
 document.getElementById("initiateButton").addEventListener("click", initiateTest)
 document.getElementById("iterateHighlightButton").addEventListener("click", iterativelyHighlightElements)
 document.getElementById("abortSlowTest").addEventListener("click", abortSlowTest)
 document.getElementById("abortHighlighting").addEventListener("click", abortHighlighting)
+document.getElementById("deleteResults").addEventListener("click", deleteResults)
 document.getElementById("slow").addEventListener("click", showTestingSpeed)
 document.getElementById("checkAll").addEventListener("click", checkAllFilter)
 
@@ -17,23 +19,6 @@ document.getElementById("pointerdownResults").addEventListener("click", displayR
 document.getElementById("touchstartResults").addEventListener("click", displayResults)
 
 document.getElementById("formResults").addEventListener("click", displayFormMarkings)
-
-// Show the testing speed for slow speed
-function showTestingSpeed() {
-    let checkbox = document.getElementById("slow").checked
-    let testingSpeedField = document.querySelector(".behavior div")
-    setVisibility(testingSpeedField, checkbox)
-}
-
-// Function for checking / unchecking all filters at once 
-function checkAllFilter() {
-    let allFilter = document.querySelectorAll('.filter input:not([id*="checkAll"])')
-    if (document.getElementById("checkAll").checked) {
-        allFilter.forEach((checkbox) => checkbox.checked = true)
-    } else {
-        allFilter.forEach((checkbox) => checkbox.checked = false)
-    }
-}
 
 // Get color values from panel
 function getColors() {
@@ -68,10 +53,45 @@ function getFilter() {
     return filters
 }
 
+// Show the testing speed for slow speed
+function showTestingSpeed() {
+    let checkbox = document.getElementById("slow").checked
+    let testingSpeedField = document.querySelector(".behavior div")
+    setVisibility(testingSpeedField, checkbox)
+}
+
+// Function for checking / unchecking all filters at once 
+function checkAllFilter() {
+    let allFilter = document.querySelectorAll('.filter input:not([id*="checkAll"])')
+    if (document.getElementById("checkAll").checked) {
+        allFilter.forEach((checkbox) => checkbox.checked = true)
+    } else {
+        allFilter.forEach((checkbox) => checkbox.checked = false)
+    }
+}
+
 // Change the visibility of an element
 function setVisibility(element, condition) {
-    if (condition) element.classList.remove("hidden")
-    else element.classList.add("hidden")
+    if (element) {
+        if (condition) element.classList.remove("hidden")
+        else element.classList.add("hidden")
+    }
+}
+
+// Disable buttons by adding a class to the element
+function disableButton(button, condition) {
+    if (condition) {
+        button.setAttribute("disabled", "")
+        button.classList.add("disabledButton")
+    } else {
+        button.removeAttribute("disabled")
+        button.classList.remove("disabledButton")
+    }
+}
+
+// Set message while the extension is reloading 
+function setReloadMessage(message) {
+    document.getElementById("reloadStatus").textContent = message
 }
 
 // Get all down-events
@@ -387,6 +407,25 @@ async function iterativelyHighlightElements() {
     })
 }
 
+// Delete results and reset extension
+function deleteResults() {
+    allDownEvents = undefined
+    testRan = false
+    let testRanStatus = document.getElementById("testRanStatus")
+    testRanStatus.textContent = ""
+    let testResults = document.getElementById("testResults")
+    setVisibility(document.getElementById("results"), false)
+    disableButton(document.getElementById("initiateButton"), false)
+    if (testResults.hasChildNodes()) document.getElementById("testResults").replaceChildren()
+    chrome.devtools.inspectedWindow.eval(`(function(){
+        let stylingElement = document.getElementById("styleElementDownEventFinder")
+        let problemBoxes = document.querySelectorAll(".problemInfoBox")
+        if (stylingElement) stylingElement.remove()
+        if (problemBoxes) problemBoxes.forEach((element) => element.remove())
+    })()`)
+}
+
+// Abort slow test and highlighting if they are running 
 function abortSlowTest() {
     chrome.scripting.executeScript({
         target: { tabId: chrome.devtools.inspectedWindow.tabId },
@@ -415,44 +454,16 @@ function abortHighlighting() {
 }
 
 // Reload Extension after tab update
-let timeoutID = []
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-    if (changeInfo.status == "loading") {
-        timeoutID.push(setTimeout(setReloadMessage, 1000, "Extension is reloading!"))
-        console.log("Loading:", timeoutID)
-    }
-    if (changeInfo.status == "complete") {
-        allDownEvents = undefined
-        testRan = false
-        timeoutID.forEach((timeout) => clearTimeout(timeout))
-        setReloadMessage("")
-        console.log("Complete:", timeoutID)
-        let testRanStatus = document.getElementById("testRanStatus")
-        testRanStatus.textContent = ""
-        let testResults = document.getElementById("testResults")
-        setVisibility(document.getElementById("results"), false)
-        disableButton(document.getElementById("initiateButton"), false)
-        if (testResults.hasChildNodes()) document.getElementById("testResults").replaceChildren()
-        chrome.devtools.inspectedWindow.eval(`(function(){
-            let stylingElement = document.getElementById("styleElementDownEventFinder")
-            let problemBoxes = document.querySelectorAll(".problemInfoBox")
-            if (stylingElement) stylingElement.remove()
-            if (problemBoxes) problemBoxes.forEach((element) => element.remove())
-        })()`)
-        timeoutID = []
+    if (document.getElementById("autoReload").checked) {
+        if (changeInfo.status == "loading") {
+            timeoutID.push(setTimeout(setReloadMessage, 1000, "Extension is reloading!"))
+        }
+        if (changeInfo.status == "complete") {
+            deleteResults()
+            timeoutID.forEach((timeout) => clearTimeout(timeout))
+            setReloadMessage("")
+            timeoutID = []
+        }
     }
 })
-
-function disableButton(button, condition) {
-    if (condition) {
-        button.setAttribute("disabled", "")
-        button.classList.add("disabledButton")
-    } else {
-        button.removeAttribute("disabled")
-        button.classList.remove("disabledButton")
-    }
-}
-
-function setReloadMessage(message) {
-    document.getElementById("reloadStatus").textContent = message
-}

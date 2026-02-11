@@ -14,7 +14,11 @@
     background-color: #FAFAFA;
 }
 
-/* Details CSS for Options */
+#reloadStatus {
+    color: #A30000;
+}
+
+/* Detail CSS for Options */
 details {
     border: 1px solid grey;
     border-radius: 4px;
@@ -49,7 +53,7 @@ details hr {
 }
 
 /* CSS for options */
-.behavior div label{
+.behavior div label {
     margin-left: 0.5em;
 }
 
@@ -79,6 +83,11 @@ details hr {
 }
 
 #optionStatus,
+#displayStatus {
+    margin-bottom: 0;
+}
+
+#optionStatus,
 #displayStatus,
 #testRanStatus {
     font-weight: bold;
@@ -86,7 +95,7 @@ details hr {
 
 /* CSS for Dialog */
 dialog p b {
-    color: #B30000;
+    color: #A30000;
 }
 
 dialog button {
@@ -119,6 +128,17 @@ button:hover:not(.disabledButton) {
 #abortHighlighting,
 #abortSlowTest {
     margin-left: 0.5em;
+}
+
+#deleteResults {
+    margin-right: 0;
+    margin-left: auto;
+    display: block;
+}
+
+#displaySave,
+#displayResetDialog {
+    margin-top: 1em;
 }
 
 /* CSS for results */

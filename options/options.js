@@ -1,14 +1,15 @@
 // Behavior
 const checkboxSlow = document.getElementById("slow")
 const speedInput = document.getElementById("speed")
-const highlightBackgroundColorInput = document.getElementById("highlightBackgroundColor")
-const highlightBorderColorInput = document.getElementById("highlightBorderColor")
+const checkboxReload = document.getElementById("autoReload")
 
 // Colors
 const primaryProblemColorInput = document.getElementById("primaryProblemColor")
 const secondaryProblemColorInput = document.getElementById("secondaryProblemColor")
 const primaryWarningColorInput = document.getElementById("primaryWarningColor")
 const secondaryWarningColorInput = document.getElementById("secondaryWarningColor")
+const highlightBackgroundColorInput = document.getElementById("highlightBackgroundColor")
+const highlightBorderColorInput = document.getElementById("highlightBorderColor")
 
 // Filter
 const checkboxMultipleDownEvents = document.getElementById("multipleDownEvents")
@@ -63,13 +64,14 @@ displayCancelButton.addEventListener("click", () => displayDialog.close())
 function saveOptions() {
     const slowTest = checkboxSlow.checked
     const speedValue = speedInput.value
-    const highlightBackgroundColor = highlightBackgroundColorInput.value
-    const highlightBorderColor = highlightBorderColorInput.value
-
+    const autoReload = checkboxReload.checked
+    
     const primaryProblemColor = primaryProblemColorInput.value
     const secondaryProblemColor = secondaryProblemColorInput.value
     const primaryWarningColor = primaryWarningColorInput.value
     const secondaryWarningColor = secondaryWarningColorInput.value
+    const highlightBackgroundColor = highlightBackgroundColorInput.value
+    const highlightBorderColor = highlightBorderColorInput.value
 
     const filterMultiple = checkboxMultipleDownEvents.checked
     const filterCSS = checkboxCSS.checked
@@ -82,16 +84,19 @@ function saveOptions() {
 
     chrome.storage.sync.set(
         {
-            sT: slowTest, sV: speedValue, hBa: highlightBackgroundColor, hBo: highlightBorderColor,
+            sT: slowTest, sV: speedValue, aR: autoReload,
             pPC: primaryProblemColor, sPC: secondaryProblemColor, pWC: primaryWarningColor, sWC: secondaryWarningColor,
+            hBa: highlightBackgroundColor, hBo: highlightBorderColor,
             fME: filterMultiple, fS: filterCSS, fF: filterFalsy,
             fSA: filterSameAttribute, fAE: filterAriaExpanded, fD: filterData,
             fHT: filterHeadTitle, fCD: filterCharacterData
         },
         () => {
+            setVisibility(optionStatus, true)
             optionStatus.textContent = "Options saved."
             setTimeout(() => {
-                optionStatus.textContent = '';
+                optionStatus.textContent = ''
+                setVisibility(optionStatus, false)
             }, 3000);
         }
     )
@@ -99,14 +104,15 @@ function saveOptions() {
 
 // Clear options 
 function clearOptions() {
-    let optionKeys = ["sT", "sV", "hBa", "hBo",
-        "pPC", "sPC", "pWC", "sWC",
+    let optionKeys = ["sT", "sV", "aR",
+        "pPC", "sPC", "pWC", "sWC", "hBa", "hBo",
         "fME", "fS", "fF", "fSA", "fAE", "fD", "fHT", "fCD"]
     let testingSpeedField = document.querySelector(".behavior div")
     optionDialog.close()
     chrome.storage.sync.remove(optionKeys)
     checkboxSlow.checked = false
     speedInput.value = 10
+    checkboxReload.checked = true
     highlightBackgroundColorInput.value = "#FDFF47"
     highlightBorderColorInput.value = "#000000"
     primaryProblemColorInput.value = "#ff8400"
@@ -122,9 +128,11 @@ function clearOptions() {
     checkboxHeadTitle.checked = true
     checkboxSameCD.checked = true
     if (!testingSpeedField.classList.contains("hidden")) testingSpeedField.classList.add("hidden")
+    setVisibility(optionStatus, true)
     optionStatus.textContent = "Defaults restored."
     setTimeout(() => {
         optionStatus.textContent = ''
+        setVisibility(optionStatus, false)
     }, 3000)
 }
 
@@ -145,9 +153,11 @@ function saveDisplay() {
             dF: displayForm
         },
         () => {
+            setVisibility(displayStatus, true)
             displayStatus.textContent = "Display options saved."
             setTimeout(() => {
-                displayStatus.textContent = '';
+                displayStatus.textContent = ''
+                setVisibility(displayStatus, false)
             }, 3000);
         }
     )
@@ -171,10 +181,12 @@ function clearDisplay() {
     // Calls function from panel.js
     displayResults()
     displayFormMarkings()
- 
+        
+    setVisibility(displayStatus, true)
     displayStatus.textContent = "Defaults restored."
     setTimeout(() => {
         displayStatus.textContent = ""
+        setVisibility(displayStatus, false)
     }, 3000)
 }
 
@@ -183,8 +195,9 @@ function restoreOptions() {
     // ToDo: Change sV to a higher value later (10 is too low, 500 or 1000)
     chrome.storage.sync.get(
         {
-            sT: false, sV: 10, hBa: "#FDFF47", hBo: "#000000",
-            pPC: "#ff8400", sPC: "#0421c4", pWC: "#9400D3", sWC: "#F5F531",
+            sT: false, sV: 10, aR: true,
+            pPC: "#ff8400", sPC: "#0421c4", pWC: "#9400D3", sWC: "#F5F531", 
+            hBa: "#FDFF47", hBo: "#000000",
             fME: false, fS: true, fF: true,
             fSA: true, fAE: true, fD: true,
             fHT: true, fCD: true,
@@ -194,6 +207,7 @@ function restoreOptions() {
         (items) => {
             checkboxSlow.checked = items.sT
             speedInput.value = items.sV
+            checkboxReload.checked = items.aR
             highlightBackgroundColorInput.value = items.hBa
             highlightBorderColorInput.value = items.hBo
 
