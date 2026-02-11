@@ -1,5 +1,4 @@
 async function testWebsite(filter, slowValues, colors, downEvents) {
-    console.log("test website")
     // Create states
     const State = Object.freeze({
         UNOBSERVABLE: "unobservable",
