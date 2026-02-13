@@ -46,6 +46,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
         characterDataOldValue: true,
         subtree: true
     }
+    const observer = new MutationObserver(callback)
 
     // Get important elements of the current website 
     const formElements = document.body.querySelectorAll("textarea, input")
@@ -55,8 +56,6 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     const [primaryWarningColor, secondaryWarningColor, primaryProblemColor, secondaryProblemColor, highlightBackgroundColor, highlightBorderColor] = colors
     const [slowCheckbox, speed] = slowValues
     if (downEvents.length === 0) return results
-
-    const observer = new MutationObserver(callback)
 
     // Callback function for the MutationObserver
     function callback(mutations, eventType, eventListeners) {
@@ -107,7 +106,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 if ((filter["headTitleFilter"]) && (nodeName == "HEAD" || nodeName == "TITLE")) {
                     return [State.WARNING, message]
                 }
-                if (addedNodes.nodeName && addedNodes[0].nodeName === "P" && addedNodes[0].hasAttribute("data-downEventFinder-windowopen")) {
+                if (addedNodes[0] && addedNodes[0].nodeName === "P" && addedNodes[0].hasAttribute("data-downEventFinder-windowopen")) {
                     message = [`Element uses the window.open() method`, `Caused by: ${eventType}`]
                     return [State.PROBLEM, message]
                 }
@@ -203,6 +202,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                         state: state
                     }
                     removeStyling(element)
+                    if (state === State.PROBLEM && message[0].includes("window.open()")) completeElement.windowOpen = true
                     switch (state) {
                         case State.UNOBSERVABLE:
                             if (element.dataset.downEventFinderState != "problem" && element.dataset.downEventFinderState != "warning") {
@@ -262,6 +262,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                     visibility: !(getComputedStyle(element).display === "none"),
                     state: state
                 }
+                if (state === State.PROBLEM && message[0].includes("window.open()")) completeElement.windowOpen = true
                 switch (state) {
                     case State.UNOBSERVABLE:
                         if (element.dataset.downEventFinderState != "problem" && element.dataset.downEventFinderState != "warning")
@@ -305,7 +306,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     } else results.formsChanged = true
 
     interactWithDialog(htmlDialog, false)
-
+    
     return results
 }
 
@@ -390,12 +391,14 @@ function interactWithDialog(htmlDialog, open) {
     }
 }
 
+// Get element with down-event
 function getElement(elementId) {
     const selector = `[data-downEventFinder-id=${elementId}]`
     let element = document.querySelector(selector)
     return element
 }
 
+// Abort slow test while it is running
 function abortSlowTest() {
     if (typeof controller !== 'undefined') {
         controller.abort()
@@ -407,6 +410,7 @@ function abortSlowTest() {
     }
 }
 
+// Remove the slow test styling
 function removeStyling(element) {
     element.style.border = ""
     element.style.backgroundColor = ""

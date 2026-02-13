@@ -158,6 +158,7 @@ function preventWindowOpen() {
 // Test website for changes 
 function executeTest(downEvents) {
     disableButton(document.getElementById("initiateButton"), true)
+    setVisibility(document.getElementById("deleteResults"), true)
     preventWindowOpen()
     if (document.getElementById("slow").checked) setVisibility(document.getElementById("abortSlowTest"), true)
     chrome.scripting.executeScript({
@@ -170,7 +171,7 @@ function executeTest(downEvents) {
             func: (...args) => testWebsite(...args)
         }).then((results) => {
             if (document.getElementById("slow").checked) setVisibility(document.getElementById("abortSlowTest"), false)
-            if (!results[0].result) return
+            if (!results[0].result) return 
             const elementsWithDownEventsLength = downEvents.length
             const eventListenersSum = downEvents.map(({ downEvent }) => downEvent).flat().length
             const formsChanged = results[0].result.formsChanged
@@ -249,7 +250,7 @@ function executeTest(downEvents) {
             detailsProblem.appendChild(summaryProblem)
             let listProblem = document.createElement("ol")
             if (problemDownEvents.length > 0) detailsProblem.setAttribute("open", "")
-
+            
             allDownEvents.forEach((obj) => {
                 let li = document.createElement("li")
                 li.classList.add("resultListEntry")
@@ -263,8 +264,12 @@ function executeTest(downEvents) {
                 if (obj.canBeFound === false) {
                     let notExisitingText = document.createElement("b")
                     notExisitingText.textContent += ' Element is not in DOM!'
-                    notExisitingText.style.color = "red"
                     li.appendChild(notExisitingText)
+                }
+                if (obj.windowOpen) {
+                    let opensWindow = document.createElement("b")
+                    opensWindow.textContent += ' Element opens a new page!'
+                    li.appendChild(opensWindow)
                 }
                 li.addEventListener("click", () => {
                     chrome.devtools.inspectedWindow.eval(`(function(){
@@ -423,6 +428,7 @@ function deleteResults() {
         if (stylingElement) stylingElement.remove()
         if (problemBoxes) problemBoxes.forEach((element) => element.remove())
     })()`)
+    setVisibility(document.getElementById("deleteResults"), false)
 }
 
 // Abort slow test and highlighting if they are running 

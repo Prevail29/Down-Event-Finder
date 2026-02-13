@@ -131,9 +131,7 @@ button:hover:not(.disabledButton) {
 }
 
 #deleteResults {
-    margin-right: 0;
-    margin-left: auto;
-    display: block;
+    float: right;
 }
 
 #displaySave,
