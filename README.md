@@ -1,7 +1,7 @@
 # Chrome Extension - Down-Events Finder
 <img width="1400" height="560" alt="Marquee_Image" src="https://github.com/user-attachments/assets/c19a352f-0d40-4678-86ec-9f9073bd27f4" />
 
-This Chrome extension displays the usage of down-events (mousedown, pointerdown, and touchstart) and whether they cause any changes to the attributes, childList, and characterData of any element within the DOM, assisting the test of the WCAG Success Criterion 2.5.2 - Pointer Cancellation.
+A Chrome extension assisting users evaluating the Web Content Accessibility Guideline Success Criterion 2.5.2 Pointer Cancellation by identifying and listing all elements on any website containing at least one of the three down-events: mousedown, pointerdown, and touchstart.
 
 Options allow for further customization:
 - Enable a slower test for closely inspecting each element.
@@ -56,3 +56,4 @@ Websites for testing the extension can be found on [GitHub](https://github.com/P
 ## License
 This extension is licensed under the MIT license.
 View the LICENSE.txt file for more information.
+
