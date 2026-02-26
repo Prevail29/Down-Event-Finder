@@ -235,7 +235,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     } else {
         // Regular test
         downEvents.forEach(obj => {
-            let element = document.querySelector(`[data-downEventFinder-id=${obj.elementId}]`)
+            let element = getElement(obj.elementId, obj.shadowRootId)
             let elementTagName = element.tagName
             let eventListeners = obj.downEvent
             eventListeners = eventListeners.filter((item, index) => eventListeners.indexOf(item) === index)
@@ -258,6 +258,7 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
                 let completeElement = {
                     element: elementTagName,
                     elementId: obj.elementId,
+                    shadowRootId: obj.shadowRootId,
                     eventListener: event,
                     visibility: !(getComputedStyle(element).display === "none"),
                     state: state
@@ -288,7 +289,8 @@ async function testWebsite(filter, slowValues, colors, downEvents) {
     let allDownEvents = results.unobservableDownEvents.concat(results.warningDownEvents, results.problemDownEvents)
     for (let i = 0; i < allDownEvents.length; i++) {
         let elementId = allDownEvents[i].elementId
-        let element = getElement(elementId)
+        let shadowRootId = allDownEvents[i].shadowRootId
+        let element = getElement(elementId, shadowRootId)
         if (!element) allDownEvents[i].canBeFound = false
     }
 
@@ -392,9 +394,12 @@ function interactWithDialog(htmlDialog, open) {
 }
 
 // Get element with down-event
-function getElement(elementId) {
+function getElement(elementId, shadowRootId) {
     const selector = `[data-downEventFinder-id=${elementId}]`
-    let element = document.querySelector(selector)
+    let element = shadowRootId ? document
+        .querySelector(`[data-downeventfinder-shadowrootid="${shadowRootId}"]`)
+        .shadowRoot.querySelector(selector)
+        : document.querySelector(selector)
     return element
 }
 

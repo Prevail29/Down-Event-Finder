@@ -100,20 +100,41 @@ function initiateTest() {
         // Retrieve all down-events from website
         chrome.devtools.inspectedWindow.eval(`(function(){
             let id = 1
+            let shadowRootId = 1
             let downEvents = []
             let allElements = document.body.querySelectorAll("*")
             allElements.forEach((element) => {
-                let eventListeners = [
-                    ...Object.values(getEventListeners(element))
-                        .flat()
-                        .map(obj => obj["type"])
-                        .filter(type => type === "mousedown" || type === "pointerdown" || type === "touchstart")
-                ]
-                if (eventListeners.length > 0) {
-                    let elementId = 'DownEventFinder-' + id
-                    element.setAttribute("data-downEventFinder-id", elementId)
-                    downEvents.push({ downEvent: eventListeners, elementId: elementId})
-                    id++
+                if (element.shadowRoot){
+                    let shadowRoot = element.shadowRoot
+                    let shadowElements = shadowRoot.querySelectorAll("*")
+                    shadowElements.forEach((element) => {
+                        let eventListeners = [
+                            ...Object.values(getEventListeners(element))
+                                .flat()
+                                .map(obj => obj["type"])
+                                .filter(type => type === "mousedown" || type === "pointerdown" || type === "touchstart")
+                        ]
+                        if (eventListeners.length > 0) {
+                            shadowRoot.host.setAttribute("data-downEventFinder-shadowRootId", shadowRootId)
+                            let elementId = 'DownEventFinder-' + id
+                            element.setAttribute("data-downEventFinder-id", elementId)
+                            downEvents.push({ downEvent: eventListeners, elementId: elementId, shadowRootId: shadowRootId })
+                            id++
+                        }
+                    })
+                } else {
+                    let eventListeners = [
+                        ...Object.values(getEventListeners(element))
+                            .flat()
+                            .map(obj => obj["type"])
+                            .filter(type => type === "mousedown" || type === "pointerdown" || type === "touchstart")
+                    ]
+                    if (eventListeners.length > 0) {
+                        let elementId = 'DownEventFinder-' + id
+                        element.setAttribute("data-downEventFinder-id", elementId)
+                        downEvents.push({ downEvent: eventListeners, elementId: elementId})
+                        id++
+                    }
                 }
             })
             return downEvents

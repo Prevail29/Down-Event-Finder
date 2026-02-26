@@ -17,7 +17,11 @@ function displayResults(colors, downEvents, checkboxes) {
     }
 
     for (const [key, value] of Object.entries(downEvents)) {
-        const element = document.querySelector(`[data-downEventFinder-id=${key}]`)
+        const selector = `[data-downEventFinder-id=${key}]`
+        const element = value[0].shadowRootId ? document
+            .querySelector(`[data-downeventfinder-shadowrootid="${value[0].shadowRootId}"]`)
+            .shadowRoot.querySelector(selector)
+            : document.querySelector(selector)
         if (element) {
             // Simple Case: Element only has a single down-event
             if (value.length === 1) {

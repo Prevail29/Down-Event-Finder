@@ -1,7 +1,11 @@
 function createProblemBoxes(problemDownEvents) {
     let problemMessages = []
     problemDownEvents.forEach(obj => {
-        const element = document.querySelector(`[data-downEventfinder-id='${obj.elementId}']`)
+        const selector = `[data-downEventFinder-id=${obj.elementId}]`
+        let element = obj.shadowRootId ? document
+            .querySelector(`[data-downeventfinder-shadowrootid="${obj.shadowRootId}"]`)
+            .shadowRoot.querySelector(selector)
+            : document.querySelector(selector)
         const eventListener = obj.eventListener
         problemMessages.push(obj.problemMessage)
         createBox(element, eventListener)
@@ -114,8 +118,12 @@ function createInformation(problemMessages) {
     ul.appendChild(liEssential)
 
     // Event handler for info button
+    let problemInfoBoxes = Array.from(document.querySelectorAll("div.problemInfoBox"))
+    document.querySelectorAll("[data-downeventfinder-shadowrootid]").forEach((host) => {
+        problemInfoBoxes.push(host.shadowRoot.querySelector("div.problemInfoBox"))
+    })
     let z = 0
-    for (const { shadowRoot } of document.querySelectorAll("div.problemInfoBox")) {
+    for (const { shadowRoot } of problemInfoBoxes) {
         let button = shadowRoot.querySelector("div button.infoButton")
         let problemList = document.createElement("ul")
         problemList.style.fontFamily = "Arial"
