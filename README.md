@@ -5,6 +5,7 @@ A Chrome extension assisting users evaluating the Web Content Accessibility Guid
 
 Options allow for further customization:
 - Enable a slower test for closely inspecting each element.
+- Enable automatic reloading for immediate testing after the page has been reloaded or a new website has been opened.
 - Enable or disable various filters for preventing / allowing the following observations:
   - "All Down-Events": any additional down-events after the first observed one.
   - "Styling": any attribute changes adding or removing CSS except for the property "display".
@@ -18,12 +19,12 @@ Options allow for further customization:
 Additionally, after running the test, the results can be further customized:
 - Display certain states (e.g. only display elements with the "problem" state).
 - Display certain down-events (e.g. only display touchstart down-events).
-- Display input and textarea ele>t changes.
+- Display input and textarea element changes.
 
 More features include:
 - Clicking on any result and viewing the element in the "elements" panel.
 - Personalizing your settings by being able to save options.
-- Iteratively highlighting all elements with down-events. 
+- Iteratively highlighting all elements with down-events.
 
 ![Showcase](https://github.com/user-attachments/assets/c1020ac8-71f9-47ed-95fc-c5c67f81793a)
 
@@ -32,8 +33,8 @@ More features include:
 2. Open the Chrome DevTools:
    * Either by pressing the F12 key.
    * Or by right-clicking on the website and selecting "inspect".
-4. Within the Chrome DevTools: Click on the ">>" Symbol in the upper bar and select the "Down-Events Finder" tab.
-5. You can now test the currently viewed website by clicking on the "Start Test" button in the "Down-Events Finder" panel.
+4. Within the Chrome DevTools: Click on the ">>" Symbol in the upper bar and select the "Down-Event Finder" tab.
+5. The currently viewed website can now be testeed by clicking on the "Start Test" button in the "Down-Event Finder" panel.
 
 ## Installation
 1. Clone the repository or download the ZIP file and extract it.
@@ -44,7 +45,7 @@ More features include:
 6. Click on "Select Folder".
 7. Navigate to the details page of the extension
 8. Turn on the extension and change any additional settings.
-9. The extension can now be used on any page by opening the Chrome devtools and selecting the "Down-Events Finder" panel.
+9. The extension can now be used on any page by opening the Chrome devtools and selecting the "Down-Event Finder" panel.
 
 ## Development
 1. Clone the repository.
@@ -56,4 +57,5 @@ Websites for testing the extension can be found on [GitHub](https://github.com/P
 ## License
 This extension is licensed under the MIT license.
 View the LICENSE.txt file for more information.
+
 
