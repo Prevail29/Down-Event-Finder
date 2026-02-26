@@ -3,6 +3,11 @@
 
 A Chrome extension assisting users evaluating the Web Content Accessibility Guideline Success Criterion 2.5.2 Pointer Cancellation by identifying and listing all elements on any website containing at least one of the three down-events: mousedown, pointerdown, and touchstart.
 
+Main features include: 
+- Listing and highlighting all elements using down-events.
+- Evaluating the severity of the down-event and giving it one of the three states: "unobservable", "warning/minor change," or "problem/major change".
+- Quick and easy installation allowing for immediate testing.
+
 Options allow for further customization:
 - Enable a slower test for closely inspecting each element.
 - Enable automatic reloading for immediate testing after the page has been reloaded or a new website has been opened.
@@ -16,15 +21,12 @@ Options allow for further customization:
   - "Targeting Head and Title": any child list changes made to the head or title of the document.
 - Change the problem, warning, and highlighting colors.
 
-Additionally, after running the test, the results can be further customized:
-- Display certain states (e.g. only display elements with the "problem" state).
-- Display certain down-events (e.g. only display touchstart down-events).
+After running the test, more options and features are available:
+- Display specific states (e.g., only display elements with the "problem" state).
+- Display specific down-events (e.g., only display touchstart down-events).
 - Display input and textarea element changes.
-
-More features include:
-- Clicking on any result and viewing the element in the "elements" panel.
-- Personalizing your settings by being able to save options.
-- Iteratively highlighting all elements with down-events.
+- Click on any result and view the element in the "elements" panel.
+- Iteratively highlight all elements with down-events.
 
 ![Showcase](https://github.com/user-attachments/assets/c1020ac8-71f9-47ed-95fc-c5c67f81793a)
 
@@ -57,5 +59,6 @@ Websites for testing the extension can be found on [GitHub](https://github.com/P
 ## License
 This extension is licensed under the MIT license.
 View the LICENSE.txt file for more information.
+
 
 
